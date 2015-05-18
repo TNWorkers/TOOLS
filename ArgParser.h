@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <iterator>
+#include <assert.h>
 using namespace std;
 
 class BadConversion : public runtime_error
@@ -67,20 +68,37 @@ ArgParser (int argc_input, char** argv_input)
 		if (args[i].substr(0,1) == "-")
 		{
 			args[i].erase(0,1);
-			if (i!=args.size()-1) // in the middle of arglist
+			
+			size_t found_eq = args[i].find("=");
+			// form "-arg=x"
+			if (found_eq != std::string::npos)
 			{
-				if (args[i+1].substr(0,1) != "-")
+				string repl_eq = args[i].replace(found_eq, 1, " ");
+				istringstream iss(repl_eq);
+				vector<string> split_eq{istream_iterator<string>{iss}, istream_iterator<string>{}};
+				assert(split_eq.size() == 2);
+				dictionary.insert(pair<string,string>(split_eq[0],split_eq[1]));
+			}
+			// form "-arg x" or "-arg"
+			else
+			{
+				if (i!=args.size()-1) // in the middle of arglist
 				{
-					dictionary.insert(pair<string,string>(args[i],args[i+1])); // store -arg val
+					// form "-arg x"
+					if (args[i+1].substr(0,1) != "-")
+					{
+						dictionary.insert(pair<string,string>(args[i],args[i+1])); // store -arg val
+					}
+					// form "-arg" is interpreted as "arg=1"
+					else
+					{
+						dictionary.insert(pair<string,string>(args[i],"1")); // store -arg 1 (true)
+					}
 				}
-				else
+				else // at the end of arglist
 				{
 					dictionary.insert(pair<string,string>(args[i],"1")); // store -arg 1 (true)
 				}
-			}
-			else // at end of arglist
-			{
-				dictionary.insert(pair<string,string>(args[i],"1")); // store -arg 1 (true)
 			}
 		}
 	}
