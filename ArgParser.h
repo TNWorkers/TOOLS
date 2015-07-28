@@ -46,7 +46,7 @@ public:
 	int    operator () (string keyword) {return get<int>(keyword);}; // parentheses () = int
 	
 	template<typename Scalar> Scalar get (string keyword, Scalar default_val=Scalar());
-	template<typename Scalar> vector<Scalar> get_list (string keyword);
+	template<typename Scalar> vector<Scalar> get_list (string keyword, vector<Scalar> default_val={Scalar()});
 	
 	bool test (string key) const;
 	
@@ -145,26 +145,33 @@ get (string keyword, Scalar default_val)
 
 template<typename Scalar>
 vector<Scalar> ArgParser::
-get_list (string keyword)
+get_list (string keyword, vector<Scalar> default_val)
 {
-	vector<string> Vstr;
-	vector<Scalar> Vnum;
-	
-	string arglist = dictionary[keyword]; // arglist="1,2,3"
-	find_and_replace(arglist,","," ");
-	istringstream ss(arglist);
-	copy(istream_iterator<string>(ss), istream_iterator<string>(), back_inserter< vector<string> >(Vstr)); // Vout[0]="1", Vout[1]="2", Vout[2]="3"
-	
-	// convert to int
-	for(auto it=Vstr.begin(); it!=Vstr.end(); ++it)
+	if (dictionary.find(keyword)!=dictionary.end())
 	{
-		istringstream iss(*it);
-		Scalar temp;
-		iss >> temp;
-		Vnum.push_back(temp);
-	}
+		vector<string> Vstr;
+		vector<Scalar> Vnum;
 	
-	return Vnum;
+		string arglist = dictionary[keyword]; // arglist="1,2,3"
+		find_and_replace(arglist,","," ");
+		istringstream ss(arglist);
+		copy(istream_iterator<string>(ss), istream_iterator<string>(), back_inserter< vector<string> >(Vstr)); // Vout[0]="1", Vout[1]="2", Vout[2]="3"
+	
+		// convert to Scalar
+		for (auto it=Vstr.begin(); it!=Vstr.end(); ++it)
+		{
+			istringstream iss(*it);
+			Scalar temp;
+			iss >> temp;
+			Vnum.push_back(temp);
+		}
+		
+		return Vnum;
+	}
+	else
+	{
+		return default_val;
+	}
 }
 
 #endif

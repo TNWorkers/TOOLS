@@ -20,7 +20,7 @@ public:
 
 	void start();
 
-	template<typename ThemeType> string info (ThemeType theme);
+	template<typename ThemeType> string info (ThemeType theme, bool RESTART=true);
 	string info();
 	
 	template<typename ThemeType> void check (ThemeType theme);
@@ -95,7 +95,7 @@ check (ThemeType theme)
 
 template<typename ThemeType>
 string Stopwatch::
-info (ThemeType theme)
+info (ThemeType theme, bool RESTART)
 {
 	gettimeofday(&t_end,NULL);
 	double dt = (t_end.tv_sec-t_start.tv_sec)*1.+(t_end.tv_usec-t_start.tv_usec)*0.000001;
@@ -103,19 +103,19 @@ info (ThemeType theme)
 	stringstream ss;
 	if (dt<60.)
 	{
-		ss << theme << "\t" << dt << " #s";
+		ss << theme << ": " << dt << " #s";
 	}
 	else if (dt>=60. && dt<3600.)
 	{
-		ss << theme << "\t" << dt/60. << " #min";
+		ss << theme << ": " << dt/60. << " #min";
 	}
 	else if (dt>=3600. && dt<86400.)
 	{
-		ss << theme << "\t" << dt/3600. << " #h";
+		ss << theme << ": " << dt/3600. << " #h";
 	}
 	else
 	{
-		ss << theme << "\t" << dt/86400. << " #d";
+		ss << theme << ": " << dt/86400. << " #d";
 	}
 	
 	if (SAVING_TO_FILE == true)
@@ -126,7 +126,7 @@ info (ThemeType theme)
 		outfile.close();
 	}
 	
-	start();
+	if (RESTART) {start();}
 	return ss.str();
 }
 
