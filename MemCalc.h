@@ -7,10 +7,9 @@ using namespace std;
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
-enum MEMUNIT {b, kB, MB, GB};
+enum MEMUNIT {byte, kB, MB, GB}; // "b" is ambiguous, hence "byte"
 
-map<MEMUNIT,double> memUnitVal = {{b,1.}, {kB,1024.}, {MB,1048576.}, {GB,1073741824.}};
-
+map<MEMUNIT,double> memUnitVal = {{byte,1.}, {kB,1024.}, {MB,1048576.}, {GB,1073741824.}};
 
 // dense vector
 template<typename Scalar>

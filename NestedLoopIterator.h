@@ -73,7 +73,7 @@ NestedLoopIterator (size_t dim_input, initializer_list<size_t> ranges_input)
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, multiplies<size_t>());
 	
 //	tensor_index.setZero();
-	fill(tensor_index.begin(), tensor_index.end(), 0);
+	std::fill(tensor_index.begin(), tensor_index.end(), 0);
 	curr_index = 0;
 }
 
@@ -105,7 +105,7 @@ NestedLoopIterator (size_t dim_input, vector<size_t> ranges_input)
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, multiplies<size_t>());
 	
 //	tensor_index.setZero();
-	fill(tensor_index.begin(), tensor_index.end(), 0);
+	std::fill(tensor_index.begin(), tensor_index.end(), 0);
 	curr_index = 0;
 }
 
@@ -117,12 +117,12 @@ NestedLoopIterator (size_t dim_input, size_t const_range)
 	ranges.resize(dim);
 	
 //	ranges.setConstant(const_range);
-	fill(tensor_index.begin(), tensor_index.end(), const_range);
+	std::fill(tensor_index.begin(), tensor_index.end(), const_range);
 //	total_range = ranges.prod();
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, multiplies<size_t>());
 	
 //	tensor_index.setZero();
-	fill(tensor_index.begin(), tensor_index.end(), 0);
+	std::fill(tensor_index.begin(), tensor_index.end(), 0);
 	curr_index = 0;
 }
 

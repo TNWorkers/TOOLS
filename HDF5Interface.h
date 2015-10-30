@@ -2,7 +2,7 @@
 #define HDF5INTERFACE
 
 #include <assert.h>
-#include <H5Cpp.h>
+#include <H5Cpp.h> // compile with -lhdf5 -lhdf5_cpp
 
 // conversion into native types of HDF5
 template<typename T> inline H5::PredType native_type() {}
