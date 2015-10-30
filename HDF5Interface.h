@@ -3,6 +3,8 @@
 
 #include <assert.h>
 #include <H5Cpp.h>
+#include <eigen3-hdf5.hpp>
+#include <Eigen/SparseCore>
 
 // conversion into native types of HDF5
 template<typename T> inline H5::PredType native_type() {}
@@ -31,7 +33,7 @@ class HDF5Interface
 public:
 	
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
-//	~HDF5Interface();
+	~HDF5Interface();
 	
 	void switch_to(FILE_ACCESS_MODE mode_input);
 	
@@ -40,10 +42,13 @@ public:
 
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
-	
+
+	template<typename ScalarType> void save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
+	template<typename ScalarType> void load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
+
 	void save_char (std::string salvandum, const char * setname);
 	void load_char (const char * setname, std::string &c);
-	
+
 	size_t get_vector_size (const char * setname);
 
 private:
@@ -60,11 +65,11 @@ HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input)
 	switch_to(mode_input);
 }
 
-//HDF5Interface::
-//~HDF5Interface()
-//{
-//	delete file;
-//}
+HDF5Interface::
+~HDF5Interface()
+{
+	delete file;
+}
 
 inline void HDF5Interface::
 switch_to (FILE_ACCESS_MODE mode_input)
@@ -72,6 +77,23 @@ switch_to (FILE_ACCESS_MODE mode_input)
 	MODE = mode_input;
 	if      (MODE == WRITE) {file = new H5::H5File(filename.c_str(), H5F_ACC_TRUNC);}
 	else if (MODE == READ)  {file = new H5::H5File(filename.c_str(), H5F_ACC_RDONLY);}
+
+}
+
+template<typename ScalarType>
+void HDF5Interface::
+save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> *  mat, std::string setname)
+{
+	assert(MODE==WRITE);
+	EigenHDF5::save(*(this->file), setname, *mat);
+}
+
+template<typename ScalarType>
+void HDF5Interface::
+load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic>  * mat, std::string setname)
+{
+	assert(MODE==READ);
+	EigenHDF5::load(*(this->file), setname, *mat);
 }
 
 template<typename ScalarType>
@@ -197,5 +219,4 @@ load_char (const char * setname, std::string &c)
 	dataset.read((void*)this_sucks_hairy_balls_but_it_works, datatype);
 	c = this_sucks_hairy_balls_but_it_works[0];
 }
-
 #endif
