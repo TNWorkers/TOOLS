@@ -2,7 +2,7 @@
 #define HDF5INTERFACE
 
 #include <assert.h>
-#include <H5Cpp.h>
+#include <H5Cpp.h> // compile with -lhdf5 -lhdf5_cpp
 #include <eigen3-hdf5.hpp>
 #include <Eigen/SparseCore>
 
@@ -219,4 +219,5 @@ load_char (const char * setname, std::string &c)
 	dataset.read((void*)this_sucks_hairy_balls_but_it_works, datatype);
 	c = this_sucks_hairy_balls_but_it_works[0];
 }
+
 #endif
