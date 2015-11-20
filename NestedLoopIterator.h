@@ -26,7 +26,7 @@ public:
 	
 	size_t operator*() {return index();}
 	
-	NestedLoopIterator& operator= (const size_t &cmp) {curr_index=cmp;}
+	NestedLoopIterator& operator= (const size_t &cmp) {curr_index=cmp; make_tensorIndex();}
 	bool operator<  (const size_t &cmp) {return curr_index< cmp;}
 	bool operator<= (const size_t &cmp) {return curr_index<=cmp;}
 	bool operator!= (const size_t &cmp) {return curr_index!=cmp;}
