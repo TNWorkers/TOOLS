@@ -34,7 +34,7 @@ public:
 	
 	size_t begin();
 	size_t end();
-
+	
 	inline size_t index() {return curr_index;}
 //	inline size_t index_sum() {return tensor_index.sum();}
 	inline size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
