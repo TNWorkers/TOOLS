@@ -40,13 +40,14 @@ public:
 	inline size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline size_t operator() (size_t index) const {return tensor_index[index];}
 	
-private:
+//private:
 
 	size_t dim;
 	size_t curr_index;
 	size_t total_range;
 	
 	void make_tensorIndex();
+	void make_reverseTensorIndex();
 	
 //	Eigen::VectorXi tensor_index;
 //	Eigen::VectorXi ranges;
@@ -141,6 +142,18 @@ make_tensorIndex()
 {
 	size_t r = curr_index;
 	for (int s=dim-1; s>=0; --s)
+//	for (size_t s=dim-1; s-->0;) // wrong
+	{
+		tensor_index[s] = r%ranges[s];
+		r /= ranges[s];
+	}
+}
+
+void NestedLoopIterator::
+make_reverseTensorIndex()
+{
+	size_t r = curr_index;
+	for (int s=0; s<dim; s++)
 //	for (size_t s=dim-1; s-->0;) // wrong
 	{
 		tensor_index[s] = r%ranges[s];
