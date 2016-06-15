@@ -2,6 +2,7 @@
 #define NESTEDLOOPITERATOR
 
 //#include <Eigen/Dense>
+#include <vector>
 #include <initializer_list>
 #include <algorithm>
 #include <functional>
@@ -13,9 +14,9 @@ class NestedLoopIterator
 public:
 	
 	NestedLoopIterator(){};
-	NestedLoopIterator (size_t dim_input, initializer_list<size_t> ranges_input);
+	NestedLoopIterator (size_t dim_input, std::initializer_list<size_t> ranges_input);
 //	NestedLoopIterator (size_t dim_input, Eigen::VectorXi ranges_input);
-	NestedLoopIterator (size_t dim_input, vector<size_t> ranges_input);
+	NestedLoopIterator (size_t dim_input, std::vector<size_t> ranges_input);
 	NestedLoopIterator (size_t dim_input, size_t const_range);
 	
 	void operator++()
@@ -51,12 +52,12 @@ public:
 	
 //	Eigen::VectorXi tensor_index;
 //	Eigen::VectorXi ranges;
-	vector<size_t> tensor_index;
-	vector<size_t> ranges;
+	std::vector<size_t> tensor_index;
+	std::vector<size_t> ranges;
 };
 
 NestedLoopIterator::
-NestedLoopIterator (size_t dim_input, initializer_list<size_t> ranges_input)
+NestedLoopIterator (size_t dim_input, std::initializer_list<size_t> ranges_input)
 :dim(dim_input)
 {
 	tensor_index.resize(dim);
@@ -94,7 +95,7 @@ NestedLoopIterator (size_t dim_input, initializer_list<size_t> ranges_input)
 //}
 
 NestedLoopIterator::
-NestedLoopIterator (size_t dim_input, vector<size_t> ranges_input)
+NestedLoopIterator (size_t dim_input, std::vector<size_t> ranges_input)
 :dim(dim_input)
 {
 	assert(ranges_input.size() == dim);

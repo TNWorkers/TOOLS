@@ -5,7 +5,7 @@
 #include <H5Cpp.h> // compile with -lhdf5 -lhdf5_cpp
 #include <eigen3-hdf5.hpp>
 #include <Eigen/SparseCore>
-
+#include <unsupported/Eigen/CXX11/Tensor>
 // conversion into native types of HDF5
 template<typename T> inline H5::PredType native_type() {}
 
@@ -45,6 +45,9 @@ public:
 
 	template<typename ScalarType> void save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
 	template<typename ScalarType> void load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
+
+	template<typename ScalarType, size_t Nl> void save_tensor (Eigen::Tensor<ScalarType,Nl> * ten, std::string setname);
+	template<typename ScalarType, size_t Nl> void load_tensor (Eigen::Tensor<ScalarType,Nl> * ten, std::string setname);
 
 	void save_char (std::string salvandum, const char * setname);
 	void load_char (const char * setname, std::string &c);
@@ -94,6 +97,31 @@ load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic>  * mat, std::string setna
 {
 	assert(MODE==READ);
 	EigenHDF5::load(*(this->file), setname, *mat);
+}
+
+template<typename ScalarType, size_t Nl>
+void HDF5Interface::
+save_tensor (Eigen::Tensor<ScalarType,Nl> *  ten, std::string setname)
+{
+	assert(MODE==WRITE);
+	const std::size_t dimensions_size = Nl;
+	std::array<size_t,Nl> tmp;
+	
+	const hsize_t dimensions[dimensions_size];
+	for (size_t i=0; i<Nl; i++)
+	{
+		dimensions[i] = ten.dimension(i);
+	}
+	H5::DataSpace space(dimensions_size, dimensions);
+	H5::IntType datatype(native_type<ScalarType>());
+
+}
+
+template<typename ScalarType,size_t Nl>
+void HDF5Interface::
+load_tensor (Eigen::Tensor<ScalarType,Nl>  * ten, std::string setname)
+{
+	assert(MODE==READ);
 }
 
 template<typename ScalarType>
