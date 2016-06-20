@@ -1,28 +1,43 @@
-#ifndef EigenDevice
-#define EigenDevice
+#ifndef EigenDeviceQ
+#define EigenDeviceQ
 
 #include <unsupported/Eigen/CXX11/ThreadPool>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-/**
-Class for handling the different devices, which can be used in Eigen to evaluate expressions.
-\note For now only the ThreadPoolDevice and the DefaultDevice are supported. The GpuDevice is not. Waiting for Eigen update...
-*/
+/**Class for handling the different devices, which can be used in Eigen to evaluate expressions.
+\note For now, only the ThreadPoolDevice and the DefaultDevice are supported. The GpuDevice is not. Waiting for Eigen update*/
 
+template<class device_type>
 class EigenDevice
 {
 public:
-	EigenDevice();
-
-	EigenDevice( size_t numCores_in ) { numCores=numCores_in; tp(numcores); thread_pool_device(tp,numCores); }
-
-	Eigen::ThreadPoolDevice getPoolDevice() { return thread_pool_device; }
-	Eigen::DefaultDevice getDefaultDevice() { return default_device; }
+	EigenDevice<device_type>() {};
+	device_type get() const;
+	void set(int Cores);
 	
 private:
-	size_t numCores;
-	Eigen::ThreadPool tp;
-	Eigen::ThreadPoolDevice thread_pool_device;
-	Eigen::DefaultDevice default_device;
+	device_type device;
+};
+
+template<class device_type>
+device_type EigenDevice<device_type>::
+get() const
+{
+	return device;
 }
+
+template<class device_type>
+void EigenDevice<device_type>::
+set( int Cores )
+{;}
+
+template<>
+void EigenDevice<Eigen::ThreadPoolDevice>::
+set( int Cores )
+{
+	Eigen::ThreadPool tp(Cores); // = Eigen::ThreadPool(4);
+	device = Eigen::ThreadPoolDevice(&tp,Cores);	
+}
+
+
 #endif
