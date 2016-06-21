@@ -6,6 +6,8 @@ using namespace std;
 
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
+#include <unsupported/Eigen/CXX11/Tensor>
+
 
 enum MEMUNIT {byte, kB, MB, GB}; // "b" is ambiguous, hence "byte"
 
@@ -23,6 +25,18 @@ template<typename Scalar>
 inline double calc_memory (const Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic> &M, MEMUNIT memunit_input=GB)
 {
 	return M.rows() * M.cols() * sizeof(Scalar) / memUnitVal[memunit_input];
+}
+
+// dense tensor
+template<typename Scalar, int Rank>
+inline double calc_memoryT (const Eigen::Tensor<Scalar,Rank> &T, MEMUNIT memunit_input=GB)
+{
+	double out=Scalar(1.);
+	for (size_t leg=0; leg<Rank; leg++)
+	{
+		out *= T.dimension(leg);
+	}
+	return out * sizeof(Scalar) / memUnitVal[memunit_input];
 }
 
 // N scalars
