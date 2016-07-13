@@ -3,16 +3,17 @@
 
 #include <iostream>
 #include <fstream>
-#include <sys/time.h>
+#include <chrono>
 #include <sstream>
-using namespace std;
+namespace std
+{
 
 enum TIME_UNIT {MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS};
 
+template<typename ClockClass=chrono::high_resolution_clock>
 class Stopwatch
 {
 public:
-
 	Stopwatch();
 	Stopwatch (string filename_input);
 	
@@ -27,48 +28,54 @@ public:
 	void check();
 	
 private:
-
-	struct timeval t_start, t_end;
+	chrono::time_point<ClockClass> t_start, t_end;
 	string filename;
 	bool SAVING_TO_FILE;
 };
 
-Stopwatch::
+template<typename ClockClass>
+Stopwatch<ClockClass>::
 Stopwatch()
 {
 	SAVING_TO_FILE = false;
 	start();
 }
 
-double Stopwatch::
+template<typename ClockClass>
+double Stopwatch<ClockClass>::
 time (TIME_UNIT u)
 {
-	gettimeofday(&t_end,NULL);
-	double dt = (t_end.tv_sec-t_start.tv_sec)*1.+(t_end.tv_usec-t_start.tv_usec)*0.000001;
-	
+	t_end = ClockClass::now();
+
 	if (u == MILLISECONDS)
 	{
-		return 1e-3*dt;
+		chrono::duration<double, ratio<1,1000> > dt = t_end-t_start;
+		return dt.count();
 	}
 	else if (u == SECONDS)
 	{
-		return dt;
+		chrono::duration<double, ratio<1,1> > dt = t_end-t_start;
+		return dt.count();
 	}
 	else if (u == MINUTES)
 	{
-		return dt/60.;
+		chrono::duration<double, ratio<60,1> > dt = t_end-t_start;
+		return dt.count();
 	}
 	else if (u == HOURS)
 	{
-		return dt/3600.;
+		chrono::duration<double, ratio<3600,1> > dt = t_end-t_start;
+		return dt.count();
 	}
 	else if (u == DAYS)
 	{
-		return dt/86400.;
+		chrono::duration<double, ratio<86400,1> > dt = t_end-t_start;
+		return dt.count();
 	}
 }
 
-Stopwatch::
+template<typename ClockClass>
+Stopwatch<ClockClass>::
 Stopwatch (string filename_input)
 {
 	filename = filename_input;
@@ -80,42 +87,50 @@ Stopwatch (string filename_input)
 	start();
 }
 
-inline void Stopwatch::
+template<typename ClockClass>
+inline void Stopwatch<ClockClass>::
 start()
 {
-	gettimeofday(&t_start,NULL);
+	t_start = ClockClass::now();
 }
 
+template<typename ClockClass>
 template<typename ThemeType>
-void Stopwatch::
+void Stopwatch<ClockClass>::
 check (ThemeType theme)
 {
 	cout << info(theme) << endl;
 }
 
+template<typename ClockClass>
 template<typename ThemeType>
-string Stopwatch::
+string Stopwatch<ClockClass>::
 info (ThemeType theme, bool RESTART)
 {
-	gettimeofday(&t_end,NULL);
-	double dt = (t_end.tv_sec-t_start.tv_sec)*1.+(t_end.tv_usec-t_start.tv_usec)*0.000001;
-	
+	t_end = ClockClass::now();
+
+	chrono::duration<double, ratio<1,1> > dtTest = t_end-t_start;
+
 	stringstream ss;
-	if (dt<60.)
+	if (dtTest.count()<60.)
 	{
-		ss << theme << ": " << dt << " #s";
+		chrono::duration<double, ratio<1,1> > dt = t_end-t_start;
+		ss << theme << ": " << dt.count() << " #s";
 	}
-	else if (dt>=60. && dt<3600.)
+	else if (dtTest.count()>=60. && dtTest.count()<3600.)
 	{
-		ss << theme << ": " << dt/60. << " #min";
+		chrono::duration<double, ratio<60,1> > dt = t_end-t_start;
+		ss << theme << ": " << dt.count() << " #min";
 	}
-	else if (dt>=3600. && dt<86400.)
+	else if (dtTest.count()>=3600. && dtTest.count()<86400.)
 	{
-		ss << theme << ": " << dt/3600. << " #h";
+		chrono::duration<double, ratio<3600,1> > dt = t_end-t_start;
+		ss << theme << ": " << dt.count() << " #h";
 	}
 	else
 	{
-		ss << theme << ": " << dt/86400. << " #d";
+		chrono::duration<double, ratio<86400,1> > dt = t_end-t_start;
+		ss << theme << ": " << dt.count() << " #d";
 	}
 	
 	if (SAVING_TO_FILE == true)
@@ -130,16 +145,20 @@ info (ThemeType theme, bool RESTART)
 	return ss.str();
 }
 
-inline void Stopwatch::
+template<typename ClockClass>
+inline void Stopwatch<ClockClass>::
 check()
 {
 	check("");
 }
 
-inline string Stopwatch::
+template<typename ClockClass>
+inline string Stopwatch<ClockClass>::
 info()
 {
 	return info("");
 }
+	
+} //end namespace std
 
 #endif

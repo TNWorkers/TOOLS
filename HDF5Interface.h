@@ -26,7 +26,7 @@ template<> inline H5::PredType native_type<std::string>(){return H5::PredType::N
 template<> inline H5::PredType native_type<signed char>(){return H5::PredType::NATIVE_SCHAR;}
 template<> inline H5::PredType native_type<unsigned char>(){return H5::PredType::NATIVE_UCHAR;}
 
-enum FILE_ACCESS_MODE {READ, WRITE};
+enum FILE_ACCESS_MODE {READ, WRITE, REWRITE};
 
 class HDF5Interface
 {
@@ -43,8 +43,8 @@ public:
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
 
-	template<typename ScalarType> void save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
-	template<typename ScalarType> void load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname);
+	template<typename ScalarType> void save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname, std::string group="");
+	template<typename ScalarType> void load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> * mat, std::string setname, std::string group="");
 
 	template<typename ScalarType, size_t Nl> void save_tensor (Eigen::Tensor<ScalarType,Nl> * ten, std::string setname);
 	template<typename ScalarType, size_t Nl> void load_tensor (Eigen::Tensor<ScalarType,Nl> * ten, std::string setname);
@@ -80,20 +80,26 @@ switch_to (FILE_ACCESS_MODE mode_input)
 	MODE = mode_input;
 	if      (MODE == WRITE) {file = new H5::H5File(filename.c_str(), H5F_ACC_TRUNC);}
 	else if (MODE == READ)  {file = new H5::H5File(filename.c_str(), H5F_ACC_RDONLY);}
+	else if (MODE == REWRITE) {file = new H5::H5File(filename.c_str(), H5F_ACC_RDWR);}
 
 }
 
 template<typename ScalarType>
 void HDF5Interface::
-save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> *  mat, std::string setname)
+save_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic> *  mat, std::string setname, std::string group)
 {
-	assert(MODE==WRITE);
-	EigenHDF5::save(*(this->file), setname, *mat);
+	assert(MODE==WRITE or MODE==REWRITE);
+	H5::CommonFG f=*(this->file);
+	if (group != "")
+	{
+		f = new Group( file->createGroup( group.c_str() ));
+	}
+	EigenHDF5::save(f, setname, *mat);
 }
 
 template<typename ScalarType>
 void HDF5Interface::
-load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic>  * mat, std::string setname)
+load_matrix (Eigen::Matrix<ScalarType,Dynamic,Dynamic>  * mat, std::string setname, std::string group)
 {
 	assert(MODE==READ);
 	EigenHDF5::load(*(this->file), setname, *mat);
