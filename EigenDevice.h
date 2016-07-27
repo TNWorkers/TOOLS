@@ -35,6 +35,7 @@ template<>
 void EigenDevice<Eigen::ThreadPoolDevice>::
 set( int Cores )
 {
+	// Eigen::SimpleThreadPool tp(Cores); // = Eigen::ThreadPool(4);
 	Eigen::ThreadPool tp(Cores); // = Eigen::ThreadPool(4);
 	device = Eigen::ThreadPoolDevice(&tp,Cores);	
 }

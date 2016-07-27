@@ -5,31 +5,36 @@
 #include <fstream>
 #include <chrono>
 #include <sstream>
-namespace std
-{
+// #include <functional>
+// #include <experimental/type_traits>
 
 enum TIME_UNIT {MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS};
 
-template<typename ClockClass=chrono::high_resolution_clock>
+template<typename ClockClass=std::chrono::high_resolution_clock>
 class Stopwatch
 {
 public:
 	Stopwatch();
-	Stopwatch (string filename_input);
+	Stopwatch (std::string filename_input);
 	
 	double time (TIME_UNIT u=SECONDS);
 
 	void start();
 
-	template<typename ThemeType> string info (ThemeType theme, bool RESTART=true);
-	string info();
+	template<typename ThemeType> std::string info (ThemeType theme, bool RESTART=true);
+	inline std::string info();
 	
 	template<typename ThemeType> void check (ThemeType theme);
 	void check();
+
+// #if __cplusplus > 201402L
+// 	template<typename ThemeType, class F, class... ArgTypes>
+// 	result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
+// #endif	
 	
 private:
-	chrono::time_point<ClockClass> t_start, t_end;
-	string filename;
+	std::chrono::time_point<ClockClass> t_start, t_end;
+	std::string filename;
 	bool SAVING_TO_FILE;
 };
 
@@ -42,6 +47,19 @@ Stopwatch()
 }
 
 template<typename ClockClass>
+Stopwatch<ClockClass>::
+Stopwatch (std::string filename_input)
+{
+	filename = filename_input;
+	std::ofstream file(filename,std::ios::trunc); // delete file contents
+	std::fstream outfile;
+	outfile.open(filename, std::fstream::app|std::fstream::out);
+	outfile.close();
+	SAVING_TO_FILE = true;
+	start();
+}
+
+template<typename ClockClass>
 double Stopwatch<ClockClass>::
 time (TIME_UNIT u)
 {
@@ -49,42 +67,29 @@ time (TIME_UNIT u)
 
 	if (u == MILLISECONDS)
 	{
-		chrono::duration<double, ratio<1,1000> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<1,1000> > dt = t_end-t_start;
 		return dt.count();
 	}
 	else if (u == SECONDS)
 	{
-		chrono::duration<double, ratio<1,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<1,1> > dt = t_end-t_start;
 		return dt.count();
 	}
 	else if (u == MINUTES)
 	{
-		chrono::duration<double, ratio<60,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<60,1> > dt = t_end-t_start;
 		return dt.count();
 	}
 	else if (u == HOURS)
 	{
-		chrono::duration<double, ratio<3600,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<3600,1> > dt = t_end-t_start;
 		return dt.count();
 	}
 	else if (u == DAYS)
 	{
-		chrono::duration<double, ratio<86400,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<86400,1> > dt = t_end-t_start;
 		return dt.count();
 	}
-}
-
-template<typename ClockClass>
-Stopwatch<ClockClass>::
-Stopwatch (string filename_input)
-{
-	filename = filename_input;
-	ofstream file(filename,ios::trunc); // delete file contents
-	fstream outfile;
-	outfile.open(filename, fstream::app|fstream::out);
-	outfile.close();
-	SAVING_TO_FILE = true;
-	start();
 }
 
 template<typename ClockClass>
@@ -99,51 +104,75 @@ template<typename ThemeType>
 void Stopwatch<ClockClass>::
 check (ThemeType theme)
 {
-	cout << info(theme) << endl;
+	std::cout << info(theme) << std::endl;
 }
 
 template<typename ClockClass>
 template<typename ThemeType>
-string Stopwatch<ClockClass>::
+std::string Stopwatch<ClockClass>::
 info (ThemeType theme, bool RESTART)
 {
 	t_end = ClockClass::now();
 
-	chrono::duration<double, ratio<1,1> > dtTest = t_end-t_start;
+	std::chrono::duration<double, std::ratio<1,1> > dtTest = t_end-t_start;
 
-	stringstream ss;
+	std::stringstream ss;
 	if (dtTest.count()<60.)
 	{
-		chrono::duration<double, ratio<1,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<1,1> > dt = t_end-t_start;
 		ss << theme << ": " << dt.count() << " #s";
 	}
 	else if (dtTest.count()>=60. && dtTest.count()<3600.)
 	{
-		chrono::duration<double, ratio<60,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<60,1> > dt = t_end-t_start;
 		ss << theme << ": " << dt.count() << " #min";
 	}
 	else if (dtTest.count()>=3600. && dtTest.count()<86400.)
 	{
-		chrono::duration<double, ratio<3600,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<3600,1> > dt = t_end-t_start;
 		ss << theme << ": " << dt.count() << " #h";
 	}
 	else
 	{
-		chrono::duration<double, ratio<86400,1> > dt = t_end-t_start;
+		std::chrono::duration<double, std::ratio<86400,1> > dt = t_end-t_start;
 		ss << theme << ": " << dt.count() << " #d";
 	}
 	
 	if (SAVING_TO_FILE == true)
 	{
-		fstream outfile;
-		outfile.open(filename, fstream::app|fstream::out);
-		outfile << ss.str() << endl;
+		std::fstream outfile;
+		outfile.open(filename, std::fstream::app|std::fstream::out);
+		outfile << ss.str() << std::endl;
 		outfile.close();
 	}
 	
 	if (RESTART) {start();}
 	return ss.str();
 }
+
+// #if __cplusplus > 201402L
+// template<typename ClockClass>
+// template <typename ThemeType,  class F, class... ArgTypes>
+// result_of_t<F&&(ArgTypes&&...)> Stopwatch<ClockClass>::
+// runTime(ThemeType theme, F&& f, ArgTypes&&... args)
+// {
+// 	start();
+// 	if constexpr ( is_void<result_of_t<F&&(ArgTypes&&...)> >::value )
+// 				 {
+// 					 return invoke(forward<F>(f),forward<ArgTypes>(args)...);
+// 					 if (SAVING_TO_FILE == false) { cout << info(theme) << endl; }
+// 					 else { info(theme); }
+// 					 return result;
+// 				 }
+// 	else
+// 	{
+// 		result_of_t<F&&(ArgTypes&&...)> result = invoke(forward<F>(f),forward<ArgTypes>(args)...);
+// 		if (SAVING_TO_FILE == false) { cout << info(theme) << endl; }
+// 		else { info(theme); }
+// 		return result;
+// 	}
+// }
+// #endif
 
 template<typename ClockClass>
 inline void Stopwatch<ClockClass>::
@@ -153,12 +182,10 @@ check()
 }
 
 template<typename ClockClass>
-inline string Stopwatch<ClockClass>::
+inline std::string Stopwatch<ClockClass>::
 info()
 {
 	return info("");
 }
-	
-} //end namespace std
 
 #endif
