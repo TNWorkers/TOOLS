@@ -9,6 +9,7 @@
 #include <vector>
 #include <iterator>
 #include <assert.h>
+#include <limits>
 using namespace std;
 
 class BadConversion : public runtime_error
@@ -21,10 +22,21 @@ public:
 template<typename NumType>
 inline NumType convert_to_num (const string &s)
 {
-	istringstream ss(s);
-	NumType x;
-	if (!(ss>>x)) {throw BadConversion("convert_to_numeric(\""+s+"\")");}
-	return x;
+	if (s == "inf")
+	{
+		return numeric_limits<NumType>::infinity();
+	}
+	else if (s == "nan")
+	{
+		return numeric_limits<NumType>::quiet_NaN();
+	}
+	else
+	{
+		istringstream ss(s);
+		NumType x;
+		if (!(ss>>x)) {throw BadConversion("convert_to_numeric(\""+s+"\")");}
+		return x;
+	}
 }
 
 void find_and_replace (string& source, string const& find, string const& replace)
