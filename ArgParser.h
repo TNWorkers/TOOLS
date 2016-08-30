@@ -12,6 +12,7 @@
 #include <limits>
 using namespace std;
 
+
 class BadConversion : public runtime_error
 {
 public:
