@@ -27,6 +27,7 @@ public:
 	static size_t getNumber( const std::array<size_t,N> &tuple );
 
 private:
+	static void sort( std::array<size_t,N> &tuple );
 	static size_t getFirstNumber ( size_t R_, size_t N_, size_t j );
 	static size_t firstN ( size_t R_, size_t N_, size_t j );
 	static size_t binomial ( size_t , size_t k );
@@ -37,19 +38,21 @@ template<size_t R, size_t N>
 size_t Tuples<R,N>::
 getNumber( const std::array<size_t,N> &tuple )
 {
+	auto t=tuple;
+	sort(t);
 	size_t out=0;
 	size_t R_=R;
 	for (size_t k=0; k<N; k++)
 	{
 		if( k==0 )
 		{
-			(tuple[k] > 0) ? out += firstN(R_,N-k,tuple[k]-1) : out += 0;
-			R_ -= tuple[k]+1;
+			(t[k] > 0) ? out += firstN(R_,N-k,t[k]-1) : out += 0;
+			R_ -= t[k]+1;
 		}
 		else
 		{
-			(tuple[k]-tuple[k-1]-1 > 0) ? out += firstN(R_,N-k,(tuple[k]-tuple[k-1]-2)) : out += 0;
-			R_ -= tuple[k] - tuple[k-1];
+			(t[k]-t[k-1]-1 > 0) ? out += firstN(R_,N-k,(t[k]-t[k-1]-2)) : out += 0;
+			R_ -= t[k] - t[k-1];
 		}
 	}
 	return out;
@@ -60,6 +63,7 @@ bool Tuples<R,N>::
 isPresent(size_t j, size_t k)
 {
 	auto t=getTuple(j);
+	sort(t);
 	auto it = std::find(t.begin(),t.end(),k);
 	if (it != t.end()) { return true; }
 	else { return false; }
@@ -82,6 +86,13 @@ getTuple(size_t j)
 		R_ -= getFirstNumber(R_,N-k,j_[k])+1;
 	}
 	return out;
+}
+
+template<size_t R, size_t N>
+void Tuples<R,N>::
+sort( std::array<size_t,N> &tuple )
+{
+	std::sort(tuple.begin(),tuple.end());
 }
 
 template<size_t R, size_t N>
