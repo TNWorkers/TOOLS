@@ -35,7 +35,7 @@ enum FILE_ACCESS_MODE {READ, WRITE, REWRITE};
 class HDF5Interface
 {
 public:
-	
+	HDF5Interface () {};
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
 	// ~HDF5Interface();
 	
@@ -65,7 +65,6 @@ private:
 	FILE_ACCESS_MODE MODE;
 	std::string filename;
 	std::unique_ptr<H5::H5File> file;
-	std::map<std::string,std::unique_ptr<H5::Group> > group;
 	
 };
 
@@ -86,17 +85,15 @@ inline void HDF5Interface::
 switch_to (FILE_ACCESS_MODE mode_input)
 {
 	MODE = mode_input;
-	if      (MODE == WRITE) {file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_TRUNC);}
-	else if (MODE == READ)  {file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_RDONLY);}
-	else if (MODE == REWRITE) {file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_RDWR);}
-
+	if      (MODE == WRITE) { file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_TRUNC); }
+	else if (MODE == READ)  { file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_RDONLY); }
+	else if (MODE == REWRITE) { file = std::make_unique<H5::H5File>(filename.c_str(), H5F_ACC_RDWR); }
 }
 
 void HDF5Interface::
 create_group(std::string grp_name)
 {
-	// auto grp = std::unique_ptr<H5::Group>(new H5::Group(file->createGroup(grp_name.c_str())));
-	group.insert(std::make_pair(grp_name,std::unique_ptr<H5::Group>(new H5::Group(file->createGroup(grp_name.c_str())))));
+	file->createGroup(grp_name.c_str());
 }
 
 void HDF5Interface::
@@ -112,7 +109,10 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 	assert(MODE==WRITE or MODE==REWRITE);
 	if (grp_name != "")
 	{
-		EigenHDF5::save(*(this->group[grp_name]), setname, mat);
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		EigenHDF5::save(*g, setname, mat);
+		delete g;
 		return;
 	}
 	EigenHDF5::save(*(this->file), setname, mat);
@@ -125,7 +125,10 @@ load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std
 	assert(MODE==READ);
 	if (grp_name != "")
 	{
-		EigenHDF5::load(*(this->group[grp_name]), setname, mat);
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		EigenHDF5::load(*g, setname, mat);
+		delete g;
 		return;
 	}
 	EigenHDF5::load(*(this->file), setname, mat);
@@ -256,7 +259,7 @@ save_scalar (ScalarType x, const char * setname)
 void HDF5Interface::
 save_char (std::string salvandum, const char * setname)
 {
-	assert(MODE==WRITE);
+	assert(MODE==WRITE or MODE==REWRITE);
 	hsize_t length[] = {1};
 	H5::DataSpace space(1,length);
 	H5::StrType datatype(0,H5T_VARIABLE);
