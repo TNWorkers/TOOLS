@@ -8,7 +8,7 @@
 /**Class for ordered tuples of size \param N which contains numbers from 0 to \param R -1.
 \describe_R
 \describe_N*/
-template<size_t R, size_t N>
+template<size_t R, size_t N, typename Index=int>
 class Tuples
 {
 	using size_t = std::size_t;
@@ -20,23 +20,23 @@ public:
 
 	/**Returns the \param j 'th tuple.
 	   \param j : j is the number of the tuple*/
-	static std::array<size_t,N> getTuple(size_t j);
+	static std::array<Index,N> getTuple(size_t j);
 
 	/**Returns the number \param j of the tuple \param tuple.
 	   \param tuple*/
-	static size_t getNumber( const std::array<size_t,N> &tuple );
+	static size_t getNumber( const std::array<Index,N> &tuple );
 
 private:
-	static void sort( std::array<size_t,N> &tuple );
+	static void sort( std::array<Index,N> &tuple );
 	static size_t getFirstNumber ( size_t R_, size_t N_, size_t j );
 	static size_t firstN ( size_t R_, size_t N_, size_t j );
 	static size_t binomial ( size_t , size_t k );
 	static size_t factorial ( size_t n );
 };
 
-template<size_t R, size_t N>
-size_t Tuples<R,N>::
-getNumber( const std::array<size_t,N> &tuple )
+template<size_t R, size_t N, typename Index>
+size_t Tuples<R,N,Index>::
+getNumber( const std::array<Index,N> &tuple )
 {
 	auto t=tuple;
 	sort(t);
@@ -58,8 +58,8 @@ getNumber( const std::array<size_t,N> &tuple )
 	return out;
 }
 
-template<size_t R, size_t N>
-bool Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+bool Tuples<R,N,Index>::
 isPresent(size_t j, size_t k)
 {
 	auto t=getTuple(j);
@@ -69,17 +69,17 @@ isPresent(size_t j, size_t k)
 	else { return false; }
 }
 
-template<size_t R, size_t N>
-std::array<size_t,N> Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+std::array<Index,N> Tuples<R,N,Index>::
 getTuple(size_t j)
 {
-	std::array<size_t,N> out;
+	std::array<Index,N> out;
 	size_t R_=R;
 	std::vector<size_t>	j_; j_.push_back(j);
 	size_t offset=0;
 	for (size_t k=0; k<N; k++)
 	{
-		out[k] = getFirstNumber(R_,N-k,j_[k]) + offset;
+		out[k] = static_cast<Index>(getFirstNumber(R_,N-k,j_[k]) + offset);
 		if (getFirstNumber(R_,N-k,j_[k]) > 0) { j_.push_back( j_[k] - firstN(R_,N-k,getFirstNumber(R_,N-k,j_[k])-1)); }
 		else { j_.push_back(j_[k]); }
 		offset += getFirstNumber(R_,N-k,j_[k])+1;
@@ -88,15 +88,15 @@ getTuple(size_t j)
 	return out;
 }
 
-template<size_t R, size_t N>
-void Tuples<R,N>::
-sort( std::array<size_t,N> &tuple )
+template<size_t R, size_t N, typename Index>
+void Tuples<R,N,Index>::
+sort( std::array<Index,N> &tuple )
 {
 	std::sort(tuple.begin(),tuple.end());
 }
 
-template<size_t R, size_t N>
-size_t Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+size_t Tuples<R,N,Index>::
 getFirstNumber( size_t R_, size_t N_, size_t j )
 {
 	for (size_t k=0; k<=R_-N_; k++)
@@ -109,8 +109,8 @@ getFirstNumber( size_t R_, size_t N_, size_t j )
 	assert(false and "error");
 }
 
-template<size_t R, size_t N>
-size_t Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+size_t Tuples<R,N,Index>::
 firstN( size_t R_, size_t N_, size_t j )
 {
 	assert(j <= (R_-N_) and "invalid number.");
@@ -122,15 +122,15 @@ firstN( size_t R_, size_t N_, size_t j )
 	return out;
 }
 
-template<size_t R, size_t N>
-size_t Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+size_t Tuples<R,N,Index>::
 binomial (std::size_t n, std::size_t k)
 {
 	return factorial(n)/(factorial(k)*factorial(n-k));
 }
 
-template<size_t R, size_t N>
-size_t Tuples<R,N>::
+template<size_t R, size_t N, typename Index>
+size_t Tuples<R,N,Index>::
 factorial(size_t n)
 {
   return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
