@@ -17,6 +17,7 @@ public:
 	
 private:
 	device_type device;
+	// Eigen::SimpleThreadPool pool;
 };
 
 template<class device_type>
@@ -35,8 +36,9 @@ template<>
 void EigenDevice<Eigen::ThreadPoolDevice>::
 set( int Cores )
 {
-	// Eigen::SimpleThreadPool tp(Cores); // = Eigen::ThreadPool(4);
-	Eigen::ThreadPool tp(Cores); // = Eigen::ThreadPool(4);
+	Eigen::SimpleThreadPool tp(Cores);
+	// pool = Eigen::SimpleThreadPool(4);
+	// Eigen::NonBlockingThreadPool tp(Cores);
 	device = Eigen::ThreadPoolDevice(&tp,Cores);	
 }
 
