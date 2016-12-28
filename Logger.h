@@ -4,13 +4,13 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-using namespace std;
 
 #include "ArgParser.h"
 #include "StringStuff.h"
 
 class Logger
 {
+	typedef std::string string;
 public:
 
 	Logger(){};
@@ -23,9 +23,9 @@ public:
 	void write();
 	
 	// std::endl is a function template:
-	Logger &operator<< (ostream& (*f)(ostream&));
+	Logger &operator<< (std::ostream& (*f)(std::ostream&));
 	
-	stringstream stream;
+	std::stringstream stream;
 
 private:
 
@@ -55,7 +55,7 @@ set (string filename_input, string subfolder_input)
 //	if (subfolder.at(0) != '.' and subfolder.at(1) != '/') {subfolder = "./"+subfolder;}
 	make_foldername(subfolder);
 	filename = make_string(subfolder,filename_input);
-	cout << "logfile: " << filename << endl;
+	std::cout << "logfile: " << filename << std::endl;
 	construct();
 }
 
@@ -80,15 +80,15 @@ Logger::
 void Logger::
 append()
 {
-//	ofstream logfile;
+//	std::ofstream logfile;
 //	logfile.open(filename,ios_base::app);
 //	logfile << val;
 //	logfile.close();
 	
 //	logfile << val;
 
-	ofstream logfile;
-	logfile.open(filename,ios_base::app);
+	std::ofstream logfile;
+	logfile.open(filename,std::ios_base::app);
 	logfile << stream.str();
 	logfile.close();
 	stream.str("");
@@ -97,14 +97,14 @@ append()
 void Logger::
 write()
 {
-//	ofstream logfile;
+//	std::ofstream logfile;
 //	logfile.open(filename);
 //	logfile << val;
 //	logfile.close();
 	
 //	logfile << val;
 
-	ofstream logfile;
+	std::ofstream logfile;
 	logfile.open(filename);
 	logfile << stream.str();
 	logfile.close();
@@ -112,9 +112,9 @@ write()
 }
 
 // std::endl is a function template:
-Logger & Logger::operator << (ostream& (*f)(ostream&))
+Logger & Logger::operator << (std::ostream& (*f)(std::ostream&))
 {
-	f(cout);
+	f(std::cout);
 //	f(logfile);
 	stream << "\n";
 	append();
@@ -125,7 +125,7 @@ template <class T>
 Logger & operator << (Logger &log, T val)
 {
 	log.stream << val;
-	cout << val;
+	std::cout << val;
 	return log;
 };
 

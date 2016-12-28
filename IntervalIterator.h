@@ -5,10 +5,11 @@
 //#include "gsl_integration.h"
 #include <iostream>
 #include <complex>
+
 #include <Eigen/Dense>
+
 #include "StringStuff.h"
 #include "SimpleListInitializer.h"
-using namespace std;
 
 inline double uniformGrid (int index, double xmin, double xmax, int xpoints)
 {
@@ -75,7 +76,7 @@ public:
 		return SimpleListInitializer(&data,curr_index,2);
 	}
 	
-	SimpleListInitializer operator << (complex<double> x)
+	SimpleListInitializer operator << (std::complex<double> x)
 	{
 //		data.conservativeResize(data.rows(),3);
 //		data(curr_index,0) = genfunc(curr_index,xmin,xmax,xpoints);
@@ -97,11 +98,11 @@ public:
 	}
 	#endif
 	
-	void insert (complex<double> x) {insert({x.real(), x.imag()});}
+	void insert (std::complex<double> x) {insert({x.real(), x.imag()});}
 	
-	void save (string);
-	void save (string dumpfile, int i);
-	void save_values (string dumpfile);
+	void save (std::string dumpfile);
+	void save (std::string dumpfile, int i);
+	void save_values (std::string dumpfile);
 	
 	void reset (double xmin_input, double xmax_input, int xpoints_input);
 	
@@ -123,7 +124,7 @@ private:
 	double xmax;
 	int xpoints;
 	int curr_index;
-	string dumpfile;
+	std::string dumpfile;
 	
 	double (*genfunc)(int,double,double,int);
 	
@@ -183,18 +184,18 @@ index() const
 }
 
 void IntervalIterator::
-save (string dumpfile)
+save (std::string dumpfile)
 {
-	ofstream file(dumpfile);
+	std::ofstream file(dumpfile);
 	int Nrows = min(curr_index+1,static_cast<int>(data.rows()));
 	file << setprecision(9) << data.topRows(Nrows) << endl;
 	file.close();
 }
 
 void IntervalIterator::
-save (string dumpfile, int i)
+save (std::string dumpfile, int i)
 {
-	ofstream file(dumpfile);
+	std::ofstream file(dumpfile);
 	int Nrows = min(curr_index+1,static_cast<int>(data.rows()));
 	Eigen::MatrixXd temp(Nrows,2);
 	temp.col(0) = data.col(0).head(Nrows);
@@ -204,9 +205,9 @@ save (string dumpfile, int i)
 }
 
 void IntervalIterator::
-save_values (string dumpfile)
+save_values (std::string dumpfile)
 {
-	ofstream file(dumpfile);
+	std::ofstream file(dumpfile);
 	file << setprecision(9) << data.col(0) << endl;
 	file.close();
 }
@@ -221,8 +222,8 @@ print_status()
 string IntervalIterator::
 info()
 {
-	stringstream ss;
-	string xpoints_str;// = static_cast<ostringstream*>(&(ostringstream()<<xpoints))->str();
+	std::stringstream ss;
+	std::string xpoints_str;// = static_cast<ostringstream*>(&(ostringstream()<<xpoints))->str();
 	ss << "Interval from " << xmin << " to " << xmax << ": "
 	     << pad_zeros(curr_index+1, xpoints_str.size()) << "/" << xpoints
 	     << ", x=" << round(data(curr_index,0),1);

@@ -3,7 +3,7 @@
 
 enum COLOUR_CHOICE {BLACK, RED, GREEN, BROWN, BLUE, MAGENTA, CYAN, GRAY, YELLOW, WHITE};
 
-string TCOLOR (COLOUR_CHOICE COLOUR_input)
+std::string TCOLOR (COLOUR_CHOICE COLOUR_input)
 {
 	if      (COLOUR_input == BLACK)  {return "\033[22;0m";}
 	else if (COLOUR_input == RED)    {return "\033[22;31m";}
