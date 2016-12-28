@@ -34,6 +34,10 @@ enum FILE_ACCESS_MODE {READ, WRITE, REWRITE};
 
 class HDF5Interface
 {
+	typedef Eigen::Index Index;
+	template<typename ScalarType, Index Nl> using TensorType = Eigen::Tensor<ScalarType,Nl,Eigen::ColMajor,Index>;
+	template<typename ScalarType> using MatrixType = Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>;
+	
 public:
 	HDF5Interface () {};
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
@@ -49,16 +53,16 @@ public:
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
 
-	template<typename ScalarType> void save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat, std::string setname, std::string grp_name="");
-	template<typename ScalarType> void load_matrix (Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat, std::string setname, std::string grp_name="");
+	template<typename ScalarType> void save_matrix (const MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
+	template<typename ScalarType> void load_matrix (MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 
-	template<typename ScalarType, size_t Nl> void save_tensor (const Eigen::Tensor<ScalarType,Nl> &ten, std::string setname);
-	template<typename ScalarType, size_t Nl> void load_tensor (Eigen::Tensor<ScalarType,Nl> &ten, std::string setname);
+	template<typename ScalarType, Index Nl> void save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::string grp_name="");
+	template<typename ScalarType, Index Nl> void load_tensor (TensorType<ScalarType,Nl> &ten, std::string setname);
 
 	void save_char (std::string salvandum, const char * setname);
 	void load_char (const char * setname, std::string &c);
 
-	size_t get_vector_size (const char * setname);
+	std::size_t get_vector_size (const char * setname);
 
 private:
 
@@ -134,29 +138,72 @@ load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std
 	EigenHDF5::load(*(this->file), setname, mat);
 }
 
-template<typename ScalarType, size_t Nl>
+template<typename ScalarType, Eigen::Index Nl>
 void HDF5Interface::
-save_tensor (const Eigen::Tensor<ScalarType,Nl> &ten, std::string setname)
+save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::string grp_name)
 {
 	assert(MODE==WRITE);
-	const std::size_t dimensions_size = Nl;
-	std::array<size_t,Nl> tmp;
 	
-	const hsize_t dimensions[dimensions_size];
-	for (size_t i=0; i<Nl; i++)
+	//Need to switch the layout here, because HDF5 uses RowMajor.
+	std::array<Index,Nl> shuffle_dims;
+	Index n=Nl-1;
+	std::generate(shuffle_dims.begin(),shuffle_dims.end(),[&n]{ return n--; });
+	Eigen::Tensor<ScalarType,Nl,Eigen::RowMajor,Index> switch_to_row = ten.swap_layout().shuffle(shuffle_dims); 
+
+	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);
+	std::array<Index,dimensions_size> tmp;
+	
+	hsize_t dimensions[dimensions_size];
+	for (std::size_t i=0; i<Nl; i++)
 	{
 		dimensions[i] = ten.dimension(i);
 	}
 	H5::DataSpace space(dimensions_size, dimensions);
 	H5::IntType datatype(native_type<ScalarType>());
 
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->createDataSet(setname.c_str(), datatype, space);
+
+	}
+	else
+	{
+		dataset = file->createDataSet(setname.c_str(), datatype, space);
+	}
+	dataset.write(switch_to_row.data(), native_type<ScalarType>());
 }
 
-template<typename ScalarType,size_t Nl>
+template<typename ScalarType,Eigen::Index Nl>
 void HDF5Interface::
-load_tensor (Eigen::Tensor<ScalarType,Nl>  &ten, std::string setname)
+load_tensor (TensorType<ScalarType,Nl>  &ten, std::string setname)
 {
 	assert(MODE==READ);
+
+	H5::DataSet dataset = file->openDataSet(setname);
+	H5::DataSpace dataspace = dataset.getSpace();
+
+	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);	
+	hsize_t dimensions[dimensions_size];
+	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
+	H5::DataSpace memspace(Nl,dimensions);
+
+	std::array<Index,Nl> dims;
+	for (std::size_t i=0; i<Nl; i++)
+	{
+		dims[i] = static_cast<Index>(dimensions[i]);
+	}
+
+	//Need to use a Rowmajor tensor here and convert afterwards, because HDF5 us RowMajor storage order.
+	Eigen::Tensor<ScalarType,Nl,Eigen::RowMajor,Index> temp(dims);
+	dataset.read(temp.data(), native_type<ScalarType>(), memspace, dataspace);
+
+	std::array<Index,Nl> shuffle_dims;
+	Index n=Nl-1;
+	std::generate(shuffle_dims.begin(),shuffle_dims.end(),[&n]{ return n--; });
+	ten = temp.swap_layout().shuffle(shuffle_dims);
 }
 
 template<typename ScalarType>
