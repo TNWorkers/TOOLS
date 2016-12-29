@@ -4,6 +4,8 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <clocale>
+#include <cstdlib>
 
 void draw_progressBar (int len, double percent)
 {
@@ -16,7 +18,7 @@ void draw_progressBar (int len, double percent)
 		else                                   {progress += " ";}
 	}
 	std::cout << "[" << progress << "] " << (static_cast<int>(100*percent)) << "%";
-	flush(std::cout);
+	std::flush(std::cout);
 }
 
 std::string make_string()
@@ -24,7 +26,7 @@ std::string make_string()
 	return "";
 }
 
-template<typename FirstType, typename ... Types>
+template<typename FirstType, typename... Types>
 std::string make_string (FirstType first, Types ... rest)
 {
 	std::ostringstream out;
@@ -70,6 +72,24 @@ std::string round (double x, IntType N_decimals)
 		s.erase(s.size()-N_decimals+1);
 	}
 	return s;
+}
+
+std::size_t strlen_mb(const std::string& s)
+{
+	std::setlocale(LC_ALL, "en_US.UTF-8");
+    std::size_t result = 0;
+    const char* ptr = s.data();
+    const char* end = ptr + s.size();
+    std::mblen(NULL, 0); // reset the conversion state
+    while (ptr < end) {
+        int next = std::mblen(ptr, end-ptr);
+        if (next == -1) {
+            throw std::runtime_error("strlen_mb(): conversion error");
+        }
+        ptr += next;
+        ++result;
+    }
+    return result;
 }
 
 #endif
