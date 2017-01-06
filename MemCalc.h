@@ -47,14 +47,14 @@ inline double calc_memory (std::size_t N, MEMUNIT memunit_input=GB)
 
 // sparse matrix
 template<typename Scalar, int Options, typename Index>
-inline double calc_memory (const Eigen::SparseMatrix<Scalar,Options,Eigen::Index> &M, MEMUNIT memunit_input=GB)
+inline double calc_memory (const Eigen::SparseMatrix<Scalar,Options,Index> &M, MEMUNIT memunit_input=GB)
 {
 	return (M.nonZeros()*sizeof(Scalar) + (M.nonZeros()+M.outerSize()+1.)*sizeof(Index)) / memUnitVal[memunit_input];
 }
 
 // sparse vector
 template<typename Scalar, typename Index>
-inline double calc_memory (const Eigen::SparseVector<Scalar,0,Eigen::Index> &V, MEMUNIT memunit_input=GB)
+inline double calc_memory (const Eigen::SparseVector<Scalar,0,Index> &V, MEMUNIT memunit_input=GB)
 {
 	return V.nonZeros() * (sizeof(Scalar)+sizeof(Index)) / memUnitVal[memunit_input];
 }
