@@ -5,8 +5,8 @@
 #include <fstream>
 #include <chrono>
 #include <sstream>
-// #include <functional>
-// #include <experimental/type_traits>
+
+#include "macros.h"
 
 enum TIME_UNIT {MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS};
 
@@ -27,10 +27,10 @@ public:
 	template<typename ThemeType> void check (ThemeType theme);
 	void check();
 
-// #if __cplusplus > 201402L
-// 	template<typename ThemeType, class F, class... ArgTypes>
-// 	result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
-// #endif	
+#ifdef HELPERS_HAS_CONSTEXPR
+	template<typename ThemeType, class F, class... ArgTypes>
+	result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
+#endif	
 	
 private:
 	std::chrono::time_point<ClockClass> t_start, t_end;
@@ -150,29 +150,29 @@ info (ThemeType theme, bool RESTART)
 	return ss.str();
 }
 
-// #if __cplusplus > 201402L
-// template<typename ClockClass>
-// template <typename ThemeType,  class F, class... ArgTypes>
-// result_of_t<F&&(ArgTypes&&...)> Stopwatch<ClockClass>::
-// runTime(ThemeType theme, F&& f, ArgTypes&&... args)
-// {
-// 	start();
-// 	if constexpr ( is_void<result_of_t<F&&(ArgTypes&&...)> >::value )
-// 				 {
-// 					 return invoke(forward<F>(f),forward<ArgTypes>(args)...);
-// 					 if (SAVING_TO_FILE == false) { cout << info(theme) << endl; }
-// 					 else { info(theme); }
-// 					 return result;
-// 				 }
-// 	else
-// 	{
-// 		result_of_t<F&&(ArgTypes&&...)> result = invoke(forward<F>(f),forward<ArgTypes>(args)...);
-// 		if (SAVING_TO_FILE == false) { cout << info(theme) << endl; }
-// 		else { info(theme); }
-// 		return result;
-// 	}
-// }
-// #endif
+#ifdef HELPERS_HAS_CONSTEXPR
+template<typename ClockClass>
+template <typename ThemeType,  class F, class... ArgTypes>
+result_of_t<F&&(ArgTypes&&...)> Stopwatch<ClockClass>::
+runTime(ThemeType theme, F&& f, ArgTypes&&... args)
+{
+	start();
+	if constexpr ( is_void<result_of_t<F&&(ArgTypes&&...)> >::value )
+				 {
+					 return std::invoke(forward<F>(f),forward<ArgTypes>(args)...);
+					 if (SAVING_TO_FILE == false) { std::cout << info(theme) << std::endl; }
+					 else { info(theme); }
+					 return result;
+				 }
+	else
+	{
+		result_of_t<F&&(ArgTypes&&...)> result = std::invoke(forward<F>(f),forward<ArgTypes>(args)...);
+		if (SAVING_TO_FILE == false) { std::cout << info(theme) << std::endl; }
+		else { info(theme); }
+		return result;
+	}
+}
+#endif
 
 template<typename ClockClass>
 inline void Stopwatch<ClockClass>::
