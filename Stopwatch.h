@@ -29,7 +29,7 @@ public:
 
 #ifdef HELPERS_HAS_CONSTEXPR
 	template<typename ThemeType, class F, class... ArgTypes>
-	result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
+	std::result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
 #endif	
 	
 private:
@@ -153,20 +153,19 @@ info (ThemeType theme, bool RESTART)
 #ifdef HELPERS_HAS_CONSTEXPR
 template<typename ClockClass>
 template <typename ThemeType,  class F, class... ArgTypes>
-result_of_t<F&&(ArgTypes&&...)> Stopwatch<ClockClass>::
+std::result_of_t<F&&(ArgTypes&&...)> Stopwatch<ClockClass>::
 runTime(ThemeType theme, F&& f, ArgTypes&&... args)
 {
 	start();
-	if constexpr ( is_void<result_of_t<F&&(ArgTypes&&...)> >::value )
+	if constexpr ( std::is_void<std::result_of_t<F&&(ArgTypes&&...)> >::value )
 				 {
-					 return std::invoke(forward<F>(f),forward<ArgTypes>(args)...);
-					 if (SAVING_TO_FILE == false) { std::cout << info(theme) << std::endl; }
-					 else { info(theme); }
-					 return result;
+					 return std::invoke(std::forward<F>(f),std::forward<ArgTypes>(args)...);
+					 // if (SAVING_TO_FILE == false) { std::cout << info(theme) << std::endl; }
+					 // else { info(theme); }
 				 }
 	else
 	{
-		result_of_t<F&&(ArgTypes&&...)> result = std::invoke(forward<F>(f),forward<ArgTypes>(args)...);
+		std::result_of_t<F&&(ArgTypes&&...)> result = std::invoke(std::forward<F>(f),std::forward<ArgTypes>(args)...);
 		if (SAVING_TO_FILE == false) { std::cout << info(theme) << std::endl; }
 		else { info(theme); }
 		return result;
