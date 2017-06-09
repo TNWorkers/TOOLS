@@ -41,7 +41,7 @@ public:
 	inline std::size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline std::size_t operator() (std::size_t index) const {return tensor_index[index];}
 	
-//private:
+private:
 
 	std::size_t dim;
 	std::size_t curr_index;

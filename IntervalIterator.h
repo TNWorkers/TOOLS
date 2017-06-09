@@ -115,11 +115,11 @@ public:
 	
 	double forward_step();
 	double backward_step();
-
+	
 private:
-
+	
 	Eigen::MatrixXd data;
-
+	
 	double xmin;
 	double xmax;
 	int xpoints;
