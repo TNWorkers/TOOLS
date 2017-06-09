@@ -41,8 +41,8 @@ public:
 	inline size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline size_t operator() (size_t index) const {return tensor_index[index];}
 	
-//private:
-
+private:
+	
 	size_t dim;
 	size_t curr_index;
 	size_t total_range;
