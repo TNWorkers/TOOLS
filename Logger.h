@@ -14,6 +14,8 @@ class Logger
 public:
 
 	Logger(){};
+	Logger(bool APPEND_IN, bool SHOW_START_TIME_IN = true, bool SHOW_END_TIME_IN = true)
+		:APPEND(APPEND_IN),SHOW_START_TIME(SHOW_START_TIME_IN),SHOW_END_TIME(SHOW_END_TIME_IN) {};
 	Logger (string filename_input, string subfolder="./");
 	Logger (const ArgParser arg, string subfolder="./");
 	~Logger();
@@ -21,7 +23,9 @@ public:
 	void set (string filename_input, string subfolder);
 	void append();
 	void write();
-	
+	void set_options(bool APPEND_IN, bool SHOW_START_TIME_IN, bool SHOW_END_TIME_IN) {
+		APPEND = APPEND_IN; SHOW_START_TIME = SHOW_START_TIME_IN; SHOW_END_TIME = SHOW_END_TIME_IN;}
+		
 	// std::endl is a function template:
 	Logger &operator<< (std::ostream& (*f)(std::ostream&));
 	
@@ -32,6 +36,10 @@ private:
 	void construct();
 
 	string filename;
+
+	bool SHOW_START_TIME = true;
+	bool SHOW_END_TIME = true;
+	bool APPEND = false;
 };
 
 Logger::
@@ -63,16 +71,23 @@ void Logger::
 construct()
 {
 //	logfile.open(filename);
-	time_t now = time(NULL);
-	stream << asctime(localtime(&now)) << "\n";
-	write();
+	if(SHOW_START_TIME)
+	{
+		time_t now = time(NULL);
+		stream << asctime(localtime(&now)) << "\n";
+	}
+	if(APPEND) { append(); }
+	else { write(); }
 }
 
 Logger::
 ~Logger()
 {
-	time_t now = time(NULL);
-	stream << "\n" << asctime(localtime(&now));
+	if(SHOW_END_TIME)
+	{
+		time_t now = time(NULL);
+		stream << "\n" << asctime(localtime(&now));
+	}
 	append();
 //	logfile.close();
 }

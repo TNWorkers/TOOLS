@@ -90,6 +90,7 @@ time (TIME_UNIT u)
 		std::chrono::duration<double, std::ratio<86400,1> > dt = t_end-t_start;
 		return dt.count();
 	}
+	return std::numeric_limits<double>::quiet_NaN();
 }
 
 template<typename ClockClass>
