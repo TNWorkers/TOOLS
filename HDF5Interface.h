@@ -7,7 +7,10 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
+
+#ifdef HDF5_WITH_TENSOR
 #include <unsupported/Eigen/CXX11/Tensor>
+#endif
 
 #include <eigen3-hdf5.hpp>
 // conversion into native types of HDF5
@@ -35,7 +38,9 @@ enum FILE_ACCESS_MODE {READ, WRITE, REWRITE};
 class HDF5Interface
 {
 	typedef Eigen::Index Index;
+#ifdef HDF5_WITH_TENSOR
 	template<typename ScalarType, Index Nl> using TensorType = Eigen::Tensor<ScalarType,Nl,Eigen::ColMajor,Index>;
+#endif
 	template<typename ScalarType> using MatrixType = Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>;
 	
 public:
@@ -56,9 +61,10 @@ public:
 	template<typename ScalarType> void save_matrix (const MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_matrix (MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 
+#ifdef HDF5_WITH_TENSOR
 	template<typename ScalarType, Index Nl> void save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::string grp_name="");
 	template<typename ScalarType, Index Nl> void load_tensor (TensorType<ScalarType,Nl> &ten, std::string setname);
-
+#endif
 	void save_char (std::string salvandum, const char * setname);
 	void load_char (const char * setname, std::string &c);
 
@@ -138,6 +144,7 @@ load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std
 	EigenHDF5::load(*(this->file), setname, mat);
 }
 
+#ifdef HDF5_WITH_TENSOR
 template<typename ScalarType, Eigen::Index Nl>
 void HDF5Interface::
 save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::string grp_name)
@@ -205,6 +212,7 @@ load_tensor (TensorType<ScalarType,Nl>  &ten, std::string setname)
 	std::generate(shuffle_dims.begin(),shuffle_dims.end(),[&n]{ return n--; });
 	ten = temp.swap_layout().shuffle(shuffle_dims);
 }
+#endif
 
 template<typename ScalarType>
 void HDF5Interface::
