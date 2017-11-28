@@ -7,10 +7,9 @@
 #include <Eigen/SparseCore>
 #include <unsupported/Eigen/CXX11/Tensor>
 
+enum MEMUNIT {kB, MB, GB}; // "b" is ambiguous, hence "byte"
 
-enum MEMUNIT {byte, kB, MB, GB}; // "b" is ambiguous, hence "byte"
-
-std::map<MEMUNIT,double> memUnitVal = {{byte,1.}, {kB,1024.}, {MB,1048576.}, {GB,1073741824.}};
+std::map<MEMUNIT,double> memUnitVal = {{kB,1024.}, {MB,1048576.}, {GB,1073741824.}};
 
 // dense vector
 template<typename Scalar>
