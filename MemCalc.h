@@ -7,8 +7,7 @@
 #include <Eigen/SparseCore>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-
-enum MEMUNIT {kB, MB, GB};
+enum MEMUNIT {kB, MB, GB}; // "b" is ambiguous, hence "byte"
 
 std::map<MEMUNIT,double> memUnitVal = {{kB,1024.}, {MB,1048576.}, {GB,1073741824.}};
 
