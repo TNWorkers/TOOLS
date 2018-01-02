@@ -12,7 +12,6 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #endif
 
-#include <eigen3-hdf5.hpp>
 // conversion into native types of HDF5
 template<typename T> inline H5::PredType native_type() {}
 
@@ -52,8 +51,8 @@ public:
 	void create_group(std::string grp_name);
 	void close();
 	
-	template<typename ScalarType> void save_scalar (ScalarType x, const char * setname);
-	template<typename ScalarType> void load_scalar (const char * setname, ScalarType & x);
+	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");//const char * setname);
+	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");//const char * setname, 
 
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
@@ -117,15 +116,28 @@ void HDF5Interface::
 save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat, std::string setname, std::string grp_name)
 {
 	assert(MODE==WRITE or MODE==REWRITE);
+	//Need to switch the layout here, because HDF5 uses RowMajor.
+	Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> switch_to_row = mat;
+	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
+	std::array<Index,dimensions_size> tmp;
+	
+	hsize_t dimensions[dimensions_size]; dimensions[0] = mat.rows(); dimensions[1] = mat.cols();
+	H5::DataSpace space(dimensions_size, dimensions);
+	H5::IntType datatype(native_type<ScalarType>());
+
+	H5::DataSet dataset;
 	if (grp_name != "")
 	{
 		std::string fullPath = "/" + grp_name;
 		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
-		EigenHDF5::save(*g, setname, mat);
-		delete g;
-		return;
+		dataset = g->createDataSet(setname.c_str(), datatype, space);
+
 	}
-	EigenHDF5::save(*(this->file), setname, mat);
+	else
+	{
+		dataset = file->createDataSet(setname.c_str(), datatype, space);
+	}
+	dataset.write(switch_to_row.data(), native_type<ScalarType>());
 }
 
 template<typename ScalarType>
@@ -133,15 +145,31 @@ void HDF5Interface::
 load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std::string setname, std::string grp_name)
 {
 	assert(MODE==READ);
+	H5::DataSet dataset;
 	if (grp_name != "")
 	{
 		std::string fullPath = "/" + grp_name;
 		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
-		EigenHDF5::load(*g, setname, mat);
+		dataset = g->openDataSet(setname);
 		delete g;
-		return;
 	}
-	EigenHDF5::load(*(this->file), setname, mat);
+	else
+	{
+		dataset = file->openDataSet(setname);
+	}
+	H5::DataSpace dataspace = dataset.getSpace();
+
+	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);	
+	hsize_t dimensions[dimensions_size];
+	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
+	H5::DataSpace memspace(2,dimensions);
+
+	//Need to use a Rowmajor matrix here and convert afterwards, because HDF5 us RowMajor storage order.
+	Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> temp(dimensions[0],dimensions[1]);
+
+	dataset.read(temp.data(), native_type<ScalarType>(), memspace, dataspace);
+
+	mat = temp;
 }
 
 #ifdef HDF5_WITH_TENSOR
@@ -277,14 +305,28 @@ load_vector (const char * setname, ScalarType * vec[])
 
 template<typename ScalarType>
 void HDF5Interface::
-load_scalar (const char * setname, ScalarType & x)
+load_scalar (ScalarType &x, std::string setname, std::string grp_name)
 {
 	assert(MODE==READ);
-	H5::DataSet dataset = file->openDataSet(setname);
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->openDataSet(setname);
+		delete g;
+	}
+	else
+	{
+		dataset = file->openDataSet(setname);
+	}
+
 	H5::DataSpace dataspace = dataset.getSpace();
 	hsize_t length[] = {1};
 	H5::DataSpace double_memspace(1,length);
-	dataset.read(&x, native_type<ScalarType>(), double_memspace, dataspace);
+	ScalarType tmp;
+	dataset.read(&tmp, native_type<ScalarType>(), double_memspace, dataspace);
+	x = tmp;
 }
 
 size_t HDF5Interface::
@@ -300,14 +342,26 @@ get_vector_size (const char * setname)
 
 template<typename ScalarType>
 void HDF5Interface::
-save_scalar (ScalarType x, const char * setname)
+save_scalar (ScalarType x, std::string setname, std::string grp_name)
 {
 	assert(MODE==WRITE or MODE==REWRITE);
 	hsize_t length[] = {1};
 	H5::DataSpace space(1,length);
 	H5::IntType datatype(native_type<ScalarType>());
-	H5::DataSet dataset = file->createDataSet(setname, datatype, space);
 	ScalarType x_as_array[] = {x};
+
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->createDataSet(setname.c_str(), datatype, space);
+
+	}
+	else
+	{
+		dataset = file->createDataSet(setname.c_str(), datatype, space);
+	}
 	dataset.write(x_as_array, native_type<ScalarType>());
 }
 
