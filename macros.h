@@ -30,7 +30,7 @@
     #define HELPERS_CXX11 1
   #elif __cplusplus==201402L
     #define HELPERS_CXX14 1
-  #elif __cplusplus>201402L
+  #elif __cplusplus>=201703L
     #define HELPERS_CXX17 1
   #endif
 #endif

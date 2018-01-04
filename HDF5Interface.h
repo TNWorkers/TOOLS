@@ -48,11 +48,13 @@ public:
 	// ~HDF5Interface();
 	
 	void switch_to(FILE_ACCESS_MODE mode_input);
-	void create_group(std::string grp_name);
 	void close();
-	
-	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");//const char * setname);
-	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");//const char * setname, 
+
+	void create_group(std::string grp_name);
+	bool HAS_GROUP(std::string grp_name);
+
+	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");
+	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");
 
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
@@ -100,15 +102,25 @@ switch_to (FILE_ACCESS_MODE mode_input)
 }
 
 void HDF5Interface::
-create_group(std::string grp_name)
-{
-	file->createGroup(grp_name.c_str());
-}
-
-void HDF5Interface::
 close()
 {
 	file->close();
+}
+
+void HDF5Interface::
+create_group(std::string grp_name)
+{
+	try {file->createGroup(grp_name.c_str());}
+	catch(...) {}
+}
+
+bool HDF5Interface::
+HAS_GROUP(std::string grp_name)
+{
+	bool out = true;
+	try {file->openGroup(grp_name.c_str());}
+	catch(...) {out = false;}
+	return out;
 }
 
 template<typename ScalarType>
