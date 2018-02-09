@@ -15,15 +15,10 @@ public:
 	
 	NestedLoopIterator(){};
 	NestedLoopIterator (std::size_t dim_input, std::initializer_list<std::size_t> ranges_input);
-//	NestedLoopIterator (std::size_t dim_input, Eigen::VectorXi ranges_input);
 	NestedLoopIterator (std::size_t dim_input, std::vector<std::size_t> ranges_input);
 	NestedLoopIterator (std::size_t dim_input, std::size_t const_range);
 	
-	void operator++()
-	{
-		++curr_index;
-		make_tensorIndex();
-	};
+	void operator++() {++curr_index; make_tensorIndex();};
 	
 	std::size_t operator*() {return index();}
 	
@@ -37,7 +32,6 @@ public:
 	std::size_t end();
 	
 	inline std::size_t index() {return curr_index;}
-//	inline std::size_t index_sum() {return tensor_index.sum();}
 	inline std::size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline std::size_t operator() (std::size_t index) const {return tensor_index[index];}
 	
@@ -50,8 +44,6 @@ private:
 	void make_tensorIndex();
 	void make_reverseTensorIndex();
 	
-//	Eigen::VectorXi tensor_index;
-//	Eigen::VectorXi ranges;
 	std::vector<std::size_t> tensor_index;
 	std::vector<std::size_t> ranges;
 };
@@ -71,28 +63,11 @@ NestedLoopIterator (std::size_t dim_input, std::initializer_list<std::size_t> ra
 		ranges[i] = *range;
 		++i;
 	}
-//	total_range = ranges.prod();
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, std::multiplies<std::size_t>());
 	
-//	tensor_index.setZero();
 	std::fill(tensor_index.begin(), tensor_index.end(), 0);
 	curr_index = 0;
 }
-
-//NestedLoopIterator::
-//NestedLoopIterator (int dim_input, Eigen::VectorXi ranges_input)
-//:dim(dim_input)
-//{
-//	tensor_index.resize(dim);
-//	ranges.resize(dim);
-//	assert(ranges_input.rows()==dim);
-//	
-//	ranges = ranges_input;
-//	total_range = ranges.prod();
-//	
-//	tensor_index.setZero();
-//	curr_index = 0;
-//}
 
 NestedLoopIterator::
 NestedLoopIterator (std::size_t dim_input, std::vector<std::size_t> ranges_input)
@@ -103,10 +78,8 @@ NestedLoopIterator (std::size_t dim_input, std::vector<std::size_t> ranges_input
 	ranges.resize(dim);
 	
 	ranges = ranges_input;
-//	total_range = ranges.prod();
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, std::multiplies<std::size_t>());
 	
-//	tensor_index.setZero();
 	std::fill(tensor_index.begin(), tensor_index.end(), 0);
 	curr_index = 0;
 }
@@ -119,7 +92,6 @@ NestedLoopIterator (std::size_t dim_input, std::size_t const_range)
 	ranges.resize(dim);
 	
 	std::fill(ranges.begin(), ranges.end(), const_range);
-//	std::fill(tensor_index.begin(), tensor_index.end(), const_range);
 	total_range = accumulate(ranges.begin(), ranges.end(), 1, std::multiplies<std::size_t>());
 	
 	std::fill(tensor_index.begin(), tensor_index.end(), 0);
@@ -142,8 +114,7 @@ void NestedLoopIterator::
 make_tensorIndex()
 {
 	std::size_t r = curr_index;
-	for (int s=dim-1; s>=0; --s)
-//	for (std::size_t s=dim-1; s-->0;) // wrong
+	for (int s=dim-1; s>=0; --s) // must be int!
 	{
 		tensor_index[s] = r%ranges[s];
 		r /= ranges[s];
@@ -155,7 +126,6 @@ make_reverseTensorIndex()
 {
 	std::size_t r = curr_index;
 	for (int s=0; s<dim; s++)
-//	for (std::size_t s=dim-1; s-->0;) // wrong
 	{
 		tensor_index[s] = r%ranges[s];
 		r /= ranges[s];
