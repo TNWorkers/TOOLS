@@ -38,7 +38,7 @@ public:
 	void operator++() {++curr_index;};
 	void operator--() {--curr_index;};
 	
-	IntervalIterator& operator = (const int &comp) {curr_index=comp;}
+	IntervalIterator& operator = (const int &comp) {curr_index=comp; return *this;}
 	inline double operator [] (int index) const {return data(index,0);}
 	inline double operator () (int index) const {return data(index,0);}
 	inline double coeffRef (int index) const {return data.coeffRef(index,0);};
