@@ -5,10 +5,11 @@
 #include <fstream>
 #include <chrono>
 #include <sstream>
+#include <functional>
 
 #include "macros.h"
 
-enum TIME_UNIT {MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS};
+enum TIME_UNIT {MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS, NATURAL};
 
 template<typename ClockClass=std::chrono::high_resolution_clock>
 class Stopwatch
@@ -18,19 +19,19 @@ public:
 	Stopwatch (std::string filename_input);
 	
 	double time (TIME_UNIT u=SECONDS);
-
+	
 	void start();
-
+	
 	template<typename ThemeType> std::string info (ThemeType theme, bool RESTART=true);
 	inline std::string info();
 	
 	template<typename ThemeType> void check (ThemeType theme);
 	void check();
-
-#ifdef HELPERS_HAS_CONSTEXPR
+	
+	#ifdef HELPERS_HAS_CONSTEXPR
 	template<typename ThemeType, class F, class... ArgTypes>
 	std::result_of_t<F&&(ArgTypes&&...)> runTime(ThemeType theme, F&& f, ArgTypes&&... args);
-#endif	
+	#endif
 	
 private:
 	std::chrono::time_point<ClockClass> t_start, t_end;
@@ -64,7 +65,8 @@ double Stopwatch<ClockClass>::
 time (TIME_UNIT u)
 {
 	t_end = ClockClass::now();
-
+	std::stringstream ss;
+	
 	if (u == MILLISECONDS)
 	{
 		std::chrono::duration<double, std::ratio<1,1000> > dt = t_end-t_start;
@@ -90,6 +92,31 @@ time (TIME_UNIT u)
 		std::chrono::duration<double, std::ratio<86400,1> > dt = t_end-t_start;
 		return dt.count();
 	}
+	else if (u == NATURAL)
+	{
+		std::chrono::duration<double, std::ratio<1,1> > dtTest = t_end-t_start;
+		if (dtTest.count() < 60.)
+		{
+			std::chrono::duration<double, std::ratio<1,1> > dt = t_end-t_start;
+			ss << dt.count() << "s";
+		}
+		else if (dtTest.count()>=60. && dtTest.count()<3600.)
+		{
+			std::chrono::duration<double, std::ratio<60,1> > dt = t_end-t_start;
+			ss << dt.count() << "min";
+		}
+		else if (dtTest.count()>=3600. && dtTest.count()<86400.)
+		{
+			std::chrono::duration<double, std::ratio<3600,1> > dt = t_end-t_start;
+			ss << dt.count() << "h";
+		}
+		else
+		{
+			std::chrono::duration<double, std::ratio<86400,1> > dt = t_end-t_start;
+			ss << dt.count() << "d";
+		}
+	}
+	
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
@@ -114,9 +141,9 @@ std::string Stopwatch<ClockClass>::
 info (ThemeType theme, bool RESTART)
 {
 	t_end = ClockClass::now();
-
+	
 	std::chrono::duration<double, std::ratio<1,1> > dtTest = t_end-t_start;
-
+	
 	std::stringstream ss;
 	if (dtTest.count()<60.)
 	{
