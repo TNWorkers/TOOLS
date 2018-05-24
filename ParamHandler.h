@@ -137,10 +137,10 @@ get_default (const string label) const
 		cout << "Cannot get default parameter " << label << "!" << endl;
 		assert(it != defaults.end());
 	}
-	else
-	{
-		return any_cast<Scalar>(it->second);
-	}
+	// else
+	// {
+	return any_cast<Scalar>(it->second);
+	// }
 }
 
 bool ParamHandler::

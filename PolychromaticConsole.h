@@ -15,6 +15,7 @@ std::string TCOLOR (COLOUR_CHOICE COLOUR_input)
 	else if (COLOUR_input == GRAY)   {return "\033[22;37m";}
 	else if (COLOUR_input == YELLOW) {return "\033[01;33m";}
 	else if (COLOUR_input == WHITE)  {return "\033[01;37m";}
+	return "xxx";
 }
 
 #endif
