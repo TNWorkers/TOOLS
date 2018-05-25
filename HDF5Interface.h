@@ -13,7 +13,7 @@
 #endif
 
 // conversion into native types of HDF5
-template<typename T> inline H5::PredType native_type() {}
+template<typename T> [[noreturn]] inline H5::PredType native_type() {}
 
 template<> inline H5::PredType native_type<int>() {return H5::PredType::NATIVE_INT;}
 template<> inline H5::PredType native_type<double>(){return H5::PredType::NATIVE_DOUBLE;}
