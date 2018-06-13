@@ -45,7 +45,7 @@ class HDF5Interface
 public:
 	HDF5Interface () {};
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
-	// ~HDF5Interface();
+	/* ~HDF5Interface(); */
 	
 	void switch_to(FILE_ACCESS_MODE mode_input);
 	void close();
@@ -86,11 +86,11 @@ HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input)
 	switch_to(mode_input);
 }
 
-// HDF5Interface::
-// ~HDF5Interface()
-// {
-// 	delete file;
-// }
+/* HDF5Interface:: */
+/* ~HDF5Interface() */
+/* { */
+/*         file.reset(); */
+/* } */
 
 inline void HDF5Interface::
 switch_to (FILE_ACCESS_MODE mode_input)
@@ -143,7 +143,7 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 		std::string fullPath = "/" + grp_name;
 		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
 		dataset = g->createDataSet(setname.c_str(), datatype, space);
-
+		delete g;
 	}
 	else
 	{
@@ -214,7 +214,7 @@ save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::str
 		std::string fullPath = "/" + grp_name;
 		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
 		dataset = g->createDataSet(setname.c_str(), datatype, space);
-
+		delete g;
 	}
 	else
 	{
@@ -368,7 +368,7 @@ save_scalar (ScalarType x, std::string setname, std::string grp_name)
 		std::string fullPath = "/" + grp_name;
 		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
 		dataset = g->createDataSet(setname.c_str(), datatype, space);
-
+		delete g;
 	}
 	else
 	{

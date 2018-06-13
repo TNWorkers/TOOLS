@@ -19,7 +19,7 @@ template<typename Scalar>
 struct param1d
 {
 	Scalar x;
-	Array<Scalar,Dynamic,1> a;
+	Eigen::Array<Scalar,Eigen::Dynamic,1> a;
 	string label;
 };
 
@@ -27,7 +27,7 @@ template<typename Scalar>
 struct param2d
 {
 	Scalar x;
-	Array<Scalar,Dynamic,Dynamic> a;
+	Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> a;
 	string label;
 };
 
@@ -68,7 +68,7 @@ public:
 	
 private:
 	
-	IOFormat arrayFormat;
+	Eigen::IOFormat arrayFormat;
 	
 	size_t calc_cellsize (const vector<Param> &p_list);
 	
@@ -80,7 +80,7 @@ ParamHandler::
 ParamHandler (const vector<Param> &p_list)
 {
 	params.resize(calc_cellsize(p_list));
-	arrayFormat = IOFormat(StreamPrecision, DontAlignCols, ",", ",", "", "", "{", "}");
+	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "", "", "{", "}");
 	
 	for (auto p:p_list)
 	{
@@ -93,7 +93,7 @@ ParamHandler (const vector<Param> &p_list, const map<string,std::any> &defaults_
 :defaults(defaults_input)
 {
 	params.resize(calc_cellsize(p_list));
-	arrayFormat = IOFormat(StreamPrecision, DontAlignCols, ",", ",", "", "", "{", "}");
+	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "", "", "{", "}");
 	
 	for (auto p:p_list)
 	{
@@ -239,7 +239,7 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 	}
 	else if (HAS(label_a,loc))
 	{
-		res.a = get<Array<Scalar,Dynamic,1> >(label_a,loc);
+		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,1> >(label_a,loc);
 		ss << label_a << "=" << res.a.format(arrayFormat);
 		res.label = ss.str();
 	}
@@ -275,7 +275,7 @@ fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
 	}
 	else if (HAS(label_a,loc))
 	{
-		res.a = get<Array<Scalar,Dynamic,Dynamic> >(label_a,loc);
+		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> >(label_a,loc);
 		ss << label_a << "=" << res.a.format(arrayFormat);
 		res.label = ss.str();
 	}
