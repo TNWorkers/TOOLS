@@ -64,8 +64,9 @@ public:
 	
 	template<typename Scalar> param0d<Scalar> fill_array0d (string label_def, string label_x, size_t loc=0) const;
 	template<typename Scalar> param1d<Scalar> fill_array1d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
-	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, size_t size_a, size_t loc=0, 
-	                                                        bool HOPPING=false, bool PERIODIC=false) const;
+	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
+	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, 
+	                                                        bool PERIODIC=false) const;
 	
 private:
 	
@@ -255,7 +256,7 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
-fill_array2d (string label_x, string label_a, size_t size_a, size_t loc, bool HOPPING, bool PERIODIC) const
+fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
 {
 	assert(!(HAS(label_x) and HAS(label_a)));
 	
@@ -269,21 +270,7 @@ fill_array2d (string label_x, string label_a, size_t size_a, size_t loc, bool HO
 	if (HAS(label_x,loc))
 	{
 		res.x = get<Scalar>(label_x,loc);
-		if (HOPPING)
-		{
-			res.a.matrix().template diagonal<1>().setConstant(res.x);
-			res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
-			
-			if (PERIODIC and size_a > 2)
-			{
-				res.a(0,size_a) = res.x;
-				res.a(size_a,0) = res.x;
-			}
-		}
-		else
-		{
-			res.a.matrix().diagonal().setConstant(res.x);
-		}
+		res.a.matrix().diagonal().setConstant(res.x);
 		ss << label_x << "=" << res.x;
 		res.label = ss.str();
 	}
@@ -295,6 +282,56 @@ fill_array2d (string label_x, string label_a, size_t size_a, size_t loc, bool HO
 	}
 	
 	if (HAS(label_x,loc) or HAS(label_a,loc))
+	{
+		res.label = ss.str();
+	}
+	
+	return res;
+}
+
+template<typename Scalar>
+param2d<Scalar> ParamHandler::
+fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, bool PERIODIC) const
+{
+	assert(!(HAS(label_x1) and HAS(label_a)));
+	assert(!(HAS(label_x2) and HAS(label_a)));
+	
+	param2d<Scalar> res;
+	
+	if (HAS(label_x1,loc))
+	{
+		res.x = get_default<double>(label_x1);
+	}
+	else
+	{
+		res.x = get_default<double>(label_x2);
+	}
+	res.a.resize(size_a,size_a);
+	res.a.setZero();
+	stringstream ss;
+	
+	if (HAS(label_x1,loc) or HAS(label_x2,loc))
+	{
+		res.x = HAS(label_x1,loc)? get<Scalar>(label_x1,loc) : get<Scalar>(label_x2,loc);;
+		res.a.matrix().template diagonal<1>().setConstant(res.x);
+		res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
+		
+		if (PERIODIC and size_a > 2)
+		{
+			res.a(0,size_a) = res.x;
+			res.a(size_a,0) = res.x;
+		}
+		string label = HAS(label_x1,loc)? label_x1:label_x2;
+		res.label = ss.str();
+	}
+	else if (HAS(label_a,loc))
+	{
+		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> >(label_a,loc);
+		ss << label_a << "=" << res.a.format(arrayFormat);
+		res.label = ss.str();
+	}
+	
+	if (HAS(label_x1,loc) or HAS(label_x2,loc) or HAS(label_a,loc))
 	{
 		res.label = ss.str();
 	}
