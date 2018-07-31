@@ -64,7 +64,10 @@ public:
 	
 	template<typename Scalar> param0d<Scalar> fill_array0d (string label_def, string label_x, size_t loc=0) const;
 	template<typename Scalar> param1d<Scalar> fill_array1d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
+	
 	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
+	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_t loc=0) const;
+	
 	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, 
 	                                                        bool PERIODIC=false) const;
 	
@@ -82,7 +85,7 @@ ParamHandler::
 ParamHandler (const vector<Param> &p_list)
 {
 	params.resize(calc_cellsize(p_list));
-	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "", "", "{", "}");
+	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ";", "", "", "{", "}");
 	
 	for (auto p:p_list)
 	{
@@ -95,7 +98,7 @@ ParamHandler (const vector<Param> &p_list, const map<string,std::any> &defaults_
 :defaults(defaults_input)
 {
 	params.resize(calc_cellsize(p_list));
-	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "", "", "{", "}");
+	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ";", "", "", "{", "}");
 	
 	for (auto p:p_list)
 	{
@@ -139,10 +142,7 @@ get_default (const string label) const
 		cout << "Cannot get default parameter " << label << "!" << endl;
 		assert(it != defaults.end());
 	}
-	// else
-	// {
 	return any_cast<Scalar>(it->second);
-	// }
 }
 
 bool ParamHandler::
@@ -258,19 +258,29 @@ template<typename Scalar>
 param2d<Scalar> ParamHandler::
 fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
 {
+	return fill_array2d<Scalar>(label_x, label_a, {{size_a, size_a}}, loc);
+}
+
+template<typename Scalar>
+param2d<Scalar> ParamHandler::
+fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_t loc) const
+{
 	assert(!(HAS(label_x) and HAS(label_a)));
 	
 	param2d<Scalar> res;
 	
 	res.x = get_default<double>(label_x);
-	res.a.resize(size_a,size_a);
+	res.a.resize(size_a[0],size_a[1]);
 	res.a.setZero();
 	stringstream ss;
 	
 	if (HAS(label_x,loc))
 	{
 		res.x = get<Scalar>(label_x,loc);
-		res.a.matrix().diagonal().setConstant(res.x);
+		// Same amount of orbitals: ladder
+		if (size_a[0] == size_a[1]) {res.a.matrix().diagonal().setConstant(res.x);}
+		// Different amount of orbitals: fully connected sites
+		else                    {res.a.matrix().setConstant(res.x);}
 		ss << label_x << "=" << res.x;
 		res.label = ss.str();
 	}
