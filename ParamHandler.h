@@ -181,6 +181,8 @@ HAS_NONE_OF (const initializer_list<string> &labels, const size_t &index) const
 size_t ParamHandler::
 calc_cellsize (const vector<Param> &p_list)
 {
+	if (p_list.size() == 0) return 1; // p_list = {} => use only defaults
+	
 	set<size_t> indices;
 	
 	for (auto p:p_list)
