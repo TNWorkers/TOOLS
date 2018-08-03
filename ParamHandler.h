@@ -239,13 +239,11 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 		res.x = get<Scalar>(label_x,loc);
 		res.a = res.x;
 		ss << label_x << "=" << res.x;
-		res.label = ss.str();
 	}
 	else if (HAS(label_a,loc))
 	{
 		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,1> >(label_a,loc);
 		ss << label_a << "=" << res.a.format(arrayFormat);
-		res.label = ss.str();
 	}
 	
 	if (HAS(label_x,loc) or HAS(label_a,loc))
@@ -263,6 +261,7 @@ fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
 	return fill_array2d<Scalar>(label_x, label_a, {{size_a, size_a}}, loc);
 }
 
+// hopping in x-direction
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
 fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_t loc) const
@@ -271,20 +270,26 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 	
 	param2d<Scalar> res;
 	
+	auto set_a = [&res, &size_a] ()
+	{
+		res.a.resize(size_a[0],size_a[1]);
+		res.a.setZero();
+		// Same amount of orbitals: ladder
+		if (size_a[0] == size_a[1]) {res.a.matrix().diagonal().setConstant(res.x);}
+		// Different amount of orbitals: fully connected sites
+		else                        {res.a.matrix().setConstant(res.x);}
+	};
+	
 	res.x = get_default<double>(label_x);
-	res.a.resize(size_a[0],size_a[1]);
-	res.a.setZero();
+	set_a();
+	
 	stringstream ss;
 	
 	if (HAS(label_x,loc))
 	{
 		res.x = get<Scalar>(label_x,loc);
-		// Same amount of orbitals: ladder
-		if (size_a[0] == size_a[1]) {res.a.matrix().diagonal().setConstant(res.x);}
-		// Different amount of orbitals: fully connected sites
-		else                    {res.a.matrix().setConstant(res.x);}
 		ss << label_x << "=" << res.x;
-		res.label = ss.str();
+		set_a();
 	}
 	else if (HAS(label_a,loc))
 	{
@@ -301,6 +306,7 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 	return res;
 }
 
+// hopping in y-direction
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
 fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, bool PERIODIC) const
@@ -310,6 +316,18 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	
 	param2d<Scalar> res;
 	
+	auto set_a = [&res, &size_a, &PERIODIC] ()
+	{
+		res.a.resize(size_a,size_a);
+		res.a.matrix().template diagonal<1>().setConstant(res.x);
+		res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
+		if (PERIODIC and size_a > 2)
+		{
+			res.a(0,size_a) = res.x;
+			res.a(size_a,0) = res.x;
+		}
+	};
+	
 	if (HAS(label_x1,loc))
 	{
 		res.x = get_default<double>(label_x1);
@@ -318,29 +336,24 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	{
 		res.x = get_default<double>(label_x2);
 	}
-	res.a.resize(size_a,size_a);
-	res.a.setZero();
+	set_a();
+	
 	stringstream ss;
 	
 	if (HAS(label_x1,loc) or HAS(label_x2,loc))
 	{
-		res.x = HAS(label_x1,loc)? get<Scalar>(label_x1,loc) : get<Scalar>(label_x2,loc);;
-		res.a.matrix().template diagonal<1>().setConstant(res.x);
-		res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
+		res.x = HAS(label_x1,loc)? get<Scalar>(label_x1,loc) : get<Scalar>(label_x2,loc);
+		set_a();
 		
-		if (PERIODIC and size_a > 2)
+		if (HAS(label_x1,loc))
 		{
-			res.a(0,size_a) = res.x;
-			res.a(size_a,0) = res.x;
+			ss << label_x1 << "=" << res.x;
 		}
-		string label = HAS(label_x1,loc)? label_x1:label_x2;
-		res.label = ss.str();
 	}
 	else if (HAS(label_a,loc))
 	{
 		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> >(label_a,loc);
 		ss << label_a << "=" << res.a.format(arrayFormat);
-		res.label = ss.str();
 	}
 	
 	if (HAS(label_x1,loc) or HAS(label_x2,loc) or HAS(label_a,loc))
