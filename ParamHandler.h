@@ -58,6 +58,7 @@ public:
 	bool HAS (const string label, const size_t index=0) const;
 	bool HAS_ANY_OF (const initializer_list<string> &labels, const size_t &index=0) const;
 	bool HAS_NONE_OF (const initializer_list<string> &labels, const size_t &index=0) const;
+	template<typename Scalar> bool ARE_ALL_ZERO (const initializer_list<string> &labels, const size_t &index=0) const;
 	inline size_t size() const {return params.size();}
 	
 //	string info() const;
@@ -168,7 +169,7 @@ bool ParamHandler::
 HAS_ANY_OF (const initializer_list<string> &labels, const size_t &index) const
 {
 	vector<bool> res;
-	for (const auto &label:labels) res.push_back(HAS(label,index));
+	for (const auto &label:labels) {res.push_back(HAS(label,index));}
 	return (find(res.begin(), res.end(), true) != res.end())? true:false;
 }
 
@@ -176,6 +177,15 @@ bool ParamHandler::
 HAS_NONE_OF (const initializer_list<string> &labels, const size_t &index) const
 {
 	return !HAS_ANY_OF(labels,index);
+}
+
+template<typename Scalar>
+bool ParamHandler::
+ARE_ALL_ZERO (const initializer_list<string> &labels, const size_t &index) const
+{
+	vector<bool> res;
+	for (const auto &label:labels) {res.push_back(get<Scalar>(label,index) == 0);}
+	return (find(res.begin(), res.end(), false) != res.end())? false:true;
 }
 
 size_t ParamHandler::
