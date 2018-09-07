@@ -74,12 +74,33 @@ std::string round (double x, IntType N_decimals)
 	return s;
 }
 
+std::string remove_color(const std::string &s)
+{
+	std::string tmp;
+	std::string copy=s;
+	std::size_t pos_beg = 0ul;
+	while (pos_beg != std::string::npos)
+	{
+		tmp=copy;
+		pos_beg = tmp.find("\033[");
+		if (pos_beg != std::string::npos)
+		{
+			std::size_t pos_end = tmp.find("m",pos_beg);
+			if (pos_end != std::string::npos) {tmp.erase(pos_beg,pos_beg+pos_end+1);}
+			else {throw std::runtime_error("remove_color(): error while determine the string length of colored strings.");}
+			copy=tmp;
+		}
+	}
+	return copy;
+}
+
 std::size_t strlen_mb(const std::string& s)
 {
+	std::string s_without_color = remove_color(s);
 	std::setlocale(LC_ALL, "en_US.UTF-8");
     std::size_t result = 0;
-    const char* ptr = s.data();
-    const char* end = ptr + s.size();
+    const char* ptr = s_without_color.data();
+    const char* end = ptr + s_without_color.size();
     std::mblen(NULL, 0); // reset the conversion state
     while (ptr < end) {
         int next = std::mblen(ptr, end-ptr);
@@ -91,5 +112,4 @@ std::size_t strlen_mb(const std::string& s)
     }
     return result;
 }
-
 #endif
