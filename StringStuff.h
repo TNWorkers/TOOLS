@@ -34,11 +34,10 @@ std::string make_string (FirstType first, Types ... rest)
 	return out.str();
 }
 
-void make_foldername (std::string &fname)
+void correct_foldername (std::string &fname)
 {
 	if (fname.back() != '/') {fname += "/";}
-	if      (fname.at(0) != '.' and fname.at(1) != '/') {fname = "./"+fname;}
-	else if (fname.at(0) != '.' and fname.at(1) == '/') {fname = "."+fname;}
+	if (fname.at(0) != '/' and fname.at(0) != '.') {fname = "./"+fname;}
 }
 
 template<typename T>

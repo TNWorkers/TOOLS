@@ -59,9 +59,7 @@ void Logger::
 set (string filename_input, string subfolder_input)
 {
 	string subfolder = subfolder_input;
-//	if (subfolder.back() != '/') {subfolder += "/";}
-//	if (subfolder.at(0) != '.' and subfolder.at(1) != '/') {subfolder = "./"+subfolder;}
-	make_foldername(subfolder);
+	correct_foldername(subfolder);
 	filename = make_string(subfolder,filename_input);
 	std::cout << "logfile: " << filename << std::endl;
 	construct();

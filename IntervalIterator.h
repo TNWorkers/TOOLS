@@ -188,7 +188,19 @@ save (std::string dumpfile)
 {
 	std::ofstream file(dumpfile);
 	int Nrows = min(curr_index+1,static_cast<int>(data.rows()));
-	file << setprecision(9) << data.topRows(Nrows) << endl;
+	file << setprecision(9);
+	for (size_t r=0; r<Nrows; ++r)
+	{
+		for (size_t c=0; c<data.cols(); ++c)
+		{
+			file << data(r,c);
+			if (c != data.cols()-1)
+			{
+				file << "\t";
+			}
+		}
+		file << endl;
+	}
 	file.close();
 }
 
