@@ -329,9 +329,13 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	auto set_a = [&res, &size_a, &PERIODIC] ()
 	{
 		res.a.resize(size_a,size_a);
-		res.a.matrix().template diagonal<1>().setConstant(res.x);
-		res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
-		if (PERIODIC and size_a > 2)
+        res.a.setZero();
+        if(size_a > 1)
+        {
+            res.a.matrix().template diagonal<1>().setConstant(res.x);
+            res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
+        }
+        if (PERIODIC and size_a > 2)
 		{
 			res.a(0,size_a) = res.x;
 			res.a(size_a,0) = res.x;
