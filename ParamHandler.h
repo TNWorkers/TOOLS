@@ -21,6 +21,7 @@ struct param1d
 	Scalar x;
 	Eigen::Array<Scalar,Eigen::Dynamic,1> a;
 	string label;
+	inline Scalar operator() (std::size_t i) const {return a(i);}
 };
 
 template<typename Scalar>
@@ -29,6 +30,7 @@ struct param2d
 	Scalar x;
 	Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> a;
 	string label;
+	inline Scalar operator() (std::size_t i, std::size_t j) const {return a(i,j);}
 };
 
 struct Param

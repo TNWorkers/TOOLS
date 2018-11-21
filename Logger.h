@@ -116,7 +116,7 @@ write()
 //	logfile.close();
 	
 //	logfile << val;
-
+	
 	std::ofstream logfile;
 	logfile.open(filename);
 	logfile << stream.str();

@@ -93,7 +93,7 @@ std::string remove_color(const std::string &s)
 	return copy;
 }
 
-std::size_t strlen_mb(const std::string& s)
+std::size_t strlen_mb (const std::string& s)
 {
 	std::string s_without_color = remove_color(s);
 	std::setlocale(LC_ALL, "en_US.UTF-8");
