@@ -30,8 +30,9 @@ public:
 	
 	int index() const;
 	double value() const;
+	int points() const {return xpoints;};
 	
-	double operator*() const {return value();}
+	double operator*() const {return value();};
 	
 	int begin (int datasets=1);
 	int end();
@@ -102,6 +103,8 @@ public:
 	
 	void save (std::string dumpfile);
 	void save (std::string dumpfile, int i);
+	void save (std::string dumpfile, int imin, int imax);
+	void save_EigenMatrix (std::string dumpfile, const Eigen::MatrixXd &M);
 	void save_values (std::string dumpfile);
 	
 	void reset (double xmin_input, double xmax_input, int xpoints_input);
@@ -188,7 +191,7 @@ save (std::string dumpfile)
 {
 	std::ofstream file(dumpfile);
 	int Nrows = min(curr_index+1,static_cast<int>(data.rows()));
-	file << setprecision(9);
+	file << setprecision(14);
 	for (size_t r=0; r<Nrows; ++r)
 	{
 		for (size_t c=0; c<data.cols(); ++c)
@@ -212,7 +215,33 @@ save (std::string dumpfile, int i)
 	Eigen::MatrixXd temp(Nrows,2);
 	temp.col(0) = data.col(0).head(Nrows);
 	temp.col(1) = data.col(i).head(Nrows);
-	file << setprecision(9) << temp << endl;
+	save_EigenMatrix(dumpfile,temp);
+}
+
+void IntervalIterator::
+save (std::string dumpfile, int imin, int imax)
+{
+	int Nrows = min(curr_index+1,static_cast<int>(data.rows()));
+	Eigen::MatrixXd temp(Nrows,1+imax-imin+1);
+	temp.col(0) = data.col(0).head(Nrows);
+	temp.block(0,1, Nrows,imax-imin+1) = data.block(0,imin, Nrows,imax-imin+1);
+	save_EigenMatrix(dumpfile,temp);
+}
+
+void IntervalIterator::
+save_EigenMatrix (std::string dumpfile, const Eigen::MatrixXd &M)
+{
+	std::ofstream file(dumpfile);
+	file << setprecision(14);
+	for (int i=0; i<M.rows(); ++i)
+	{
+		for (int j=0; j<M.cols(); ++j)
+		{
+			file << M(i,j);
+			if (j != M.cols()-1) file << "\t";
+		}
+		if (i != M.rows()-1) file << endl;
+	}
 	file.close();
 }
 
@@ -220,7 +249,7 @@ void IntervalIterator::
 save_values (std::string dumpfile)
 {
 	std::ofstream file(dumpfile);
-	file << setprecision(9) << data.col(0) << endl;
+	file << setprecision(14) << data.col(0) << endl;
 	file.close();
 }
 
