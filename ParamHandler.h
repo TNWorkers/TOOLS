@@ -262,6 +262,14 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 	{
 		res.label = ss.str();
 	}
+	else // default label != 0
+	{
+		if (res.x = get_default<Scalar>(label_x) and res.x != 0.)
+		{
+			ss << label_x << "=" << res.x << "(default)";
+			res.label = ss.str();
+		}
+	}
 	
 	return res;
 }
@@ -292,7 +300,7 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 		else                        {res.a.matrix().setConstant(res.x);}
 	};
 	
-	res.x = get_default<double>(label_x);
+	res.x = get_default<Scalar>(label_x);
 	set_a();
 	
 	stringstream ss;
@@ -313,6 +321,14 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 	if (HAS(label_x,loc) or HAS(label_a,loc))
 	{
 		res.label = ss.str();
+	}
+	else // default label != 0
+	{
+		if (res.x = get_default<Scalar>(label_x) and res.x != 0.)
+		{
+			ss << label_x << "=" << res.x << "(default)";
+			res.label = ss.str();
+		}
 	}
 	
 	return res;
