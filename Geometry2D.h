@@ -41,7 +41,8 @@ public:
 	static double max (const ArrayXXd &hop);
 	
 	/**Fourier transform of a y-dependent function Fy*/
-	complex<double> FT (const ArrayXcd Fy, double ky) const;
+//	complex<double> FT (const ArrayXcd Fy, double ky) const;
+	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY) const;
 	
 private:
 	
@@ -133,13 +134,16 @@ fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
 			iy_ = (ix%2==0)? iy : mirror(iy);
 			jy_ = (jx%2==0)? jy : mirror(jy);
 		}
-		int index_i = iy_+Ly*ix;
-		int index_j = jy_+Ly*jx;
+		// the index is calculated normally:
+		int index_i = iy+Ly*ix;
+		int index_j = jy+Ly*jx;
 		
+		// but is stored together with the mirrored y_:
 		if (jx == 0 and jy == 0)
 		{
-			index[make_pair(ix,iy)] = index_i;
-			coord[index_i] = make_pair(ix,iy);
+			index[make_pair(ix,iy_)] = index_i;
+			coord[index_i] = make_pair(ix,iy_);
+//			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 		}
 		
 		if (abs(ix-jx) == 1 and (iy==jy))
@@ -185,13 +189,36 @@ x_row (int iy) const
 	return out;
 }
 
-complex<double> Geometry2D::
-FT (const ArrayXcd Fy, double ky) const
+//complex<double> Geometry2D::
+//FT (const ArrayXcd Fy, double ky) const
+//{
+//	complex<double> out = 0;
+//	for (int iy=0; iy<Ly; ++iy)
+//	{
+//		out += Fy(iy) * exp(-1.i*ky*static_cast<double>(iy));
+//	}
+//	return out;
+//}
+
+vector<complex<double> > Geometry2D::
+FTy_phases (int x, int iky, bool PARITY) const
 {
-	complex<double> out = 0;
-	for (int iy=0; iy<Ly; ++iy)
+	vector<complex<double> > out(Lx*Ly);
+	for (int l=0; l<Lx*Ly; ++l)
 	{
-		out += Fy(iy) * exp(-1.i*ky*static_cast<double>(iy));
+		out[l] = 0.;
+	}
+	
+	double sign = pow(-1.,PARITY);
+	double ky = iky * 2.*M_PI/Ly;
+	
+	for (int y=0; y<Ly; ++y)
+	{
+		int i = index.at(make_pair(x,y));
+		
+		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(Ly);
+		
+//		cout << "ky=" << ky << ", x=" << x << ", y=" << y << ", i=" << i << ", index.at(make_pair(x,y))=" << index.at(make_pair(x,y)) << ", val=" << out[i] << endl;
 	}
 	return out;
 }

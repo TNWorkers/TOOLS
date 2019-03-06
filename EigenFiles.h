@@ -5,6 +5,8 @@
 #include <fstream>
 //#include <cstdint>
 //#include <filesystem>
+#include <unistd.h>
+#include <string>
 
 #include <Eigen/Dense>
 
@@ -48,5 +50,32 @@ Eigen::MatrixXd readMatrix (const std::string filename)
 	
 	return result;
 };
+
+void saveMatrix (const Eigen::MatrixXd &M, const std::string filename)
+{
+	ofstream fout(filename);
+	for (int i=0; i<M.rows(); ++i)
+	{
+		for (int j=0; j<M.cols(); ++j)
+		{
+			fout << setprecision(16) << M(i,j);
+			if (j != M.cols() - 1)
+			{
+				fout << "\t";
+			}
+			else
+			{
+				fout << endl;
+			}
+		}
+	}
+	fout.close();
+};
+
+//inline bool fileExists (const std::string& filename)
+//{
+//	struct stat buffer;
+//	return (stat(filename.c_str(), &buffer) == 0); 
+//}
 
 #endif
