@@ -40,8 +40,7 @@ public:
 	/**maximum deviation of the hopping matrix*/
 	static double max (const ArrayXXd &hop);
 	
-	/**Fourier transform of a y-dependent function Fy*/
-//	complex<double> FT (const ArrayXcd Fy, double ky) const;
+	/**Coefficients for the Fourier transform in y-direction.*/
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY) const;
 	
 private:
@@ -146,15 +145,15 @@ fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 		}
 		
-		if (abs(ix-jx) == 1 and (iy==jy))
+		if (abs(ix-jx) == 1 and (iy_==jy_))
 		{
 			HoppingMatrix(index_i,index_j) += coupling_x(ix);
 		}
-		else if (abs(iy-jy) == 1 and (ix==jx))
+		else if (abs(iy_-jy_) == 1 and (ix==jx))
 		{
-			HoppingMatrix(index_i,index_j) += coupling_y(iy);
+			HoppingMatrix(index_i,index_j) += coupling_y(iy_);
 		}
-		else if (abs(iy-jy) == Ly-1 and (ix==jx) and Ly>2)
+		else if (abs(iy_-jy_) == Ly-1 and (ix==jx) and Ly>2)
 		{
 			HoppingMatrix(index_i,index_j) += coupling_y(Ly);
 		}
@@ -189,17 +188,6 @@ x_row (int iy) const
 	return out;
 }
 
-//complex<double> Geometry2D::
-//FT (const ArrayXcd Fy, double ky) const
-//{
-//	complex<double> out = 0;
-//	for (int iy=0; iy<Ly; ++iy)
-//	{
-//		out += Fy(iy) * exp(-1.i*ky*static_cast<double>(iy));
-//	}
-//	return out;
-//}
-
 vector<complex<double> > Geometry2D::
 FTy_phases (int x, int iky, bool PARITY) const
 {
@@ -211,6 +199,8 @@ FTy_phases (int x, int iky, bool PARITY) const
 	
 	double sign = pow(-1.,PARITY);
 	double ky = iky * 2.*M_PI/Ly;
+	
+//	cout << "iky=" << iky << ", ky=" << ky << endl;
 	
 	for (int y=0; y<Ly; ++y)
 	{
