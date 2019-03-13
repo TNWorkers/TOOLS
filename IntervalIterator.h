@@ -112,8 +112,9 @@ public:
 	void print_status();
 	string info();
 	
-	Eigen::VectorXd get_values();
-	Eigen::MatrixXd get_data();
+	Eigen::VectorXd get_values() const;
+	Eigen::MatrixXd get_data() const;
+	void set_data (const Eigen::MatrixXd &data_input);
 	inline int rows() {return data.rows();}
 	
 	double forward_step();
@@ -329,15 +330,23 @@ backward_step()
 }
 
 inline Eigen::VectorXd IntervalIterator::
-get_values()
+get_values() const
 {
 	return data.col(0);
 }
 
 inline Eigen::MatrixXd IntervalIterator::
-get_data()
+get_data() const
 {
 	return data;
+}
+
+inline void IntervalIterator::
+set_data (const Eigen::MatrixXd &data_input)
+{
+	assert(data.rows() == data_input.rows());
+	data.conservativeResize(data_input.rows(), data_input.cols()+1);
+	data.block(0,1, data_input.rows(),data_input.cols()) = data_input;
 }
 
 //-------------------------------------------------------------------

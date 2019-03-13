@@ -110,6 +110,8 @@ Geometry2D(TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coup
 void Geometry2D::
 fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
 {
+	if (Lx==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
+	
 	HoppingMatrix.resize(Lx*Ly,Lx*Ly); HoppingMatrix.setZero();
 	
 	// Mirrors the y coordinate to create a snake.

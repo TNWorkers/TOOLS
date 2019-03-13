@@ -8,6 +8,8 @@
 #include "ArgParser.h"
 #include "StringStuff.h"
 
+#include "termcolor.hpp"
+
 class Logger
 {
 	typedef std::string string;
@@ -102,7 +104,7 @@ append()
 
 	std::ofstream logfile;
 	logfile.open(filename,std::ios_base::app);
-	logfile << stream.str();
+	logfile << remove_termcolor(stream.str());
 	logfile.close();
 	stream.str("");
 }
