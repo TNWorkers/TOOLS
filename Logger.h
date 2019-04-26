@@ -8,8 +8,6 @@
 #include "ArgParser.h"
 #include "StringStuff.h"
 
-#include "termcolor.hpp"
-
 class Logger
 {
 	typedef std::string string;
