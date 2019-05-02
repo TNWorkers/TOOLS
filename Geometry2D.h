@@ -31,14 +31,22 @@ public:
 	/**all x coordinates at a given iy*/
 	ArrayXd x_row (int iy) const;
 	
-	/**average deviation of the hopping matrix*/
-	static double avg (const ArrayXXd &hop);
+	/**average distance of the hopping matrix*/
+	static double avgd (const ArrayXXd &hop);
 	
-	/**standard deviation of the hopping matrix*/
+	/**standard deviation of the distance in the hopping matrix*/
 	static double sigma (const ArrayXXd &hop);
 	
-	/**maximum deviation of the hopping matrix*/
-	static double max (const ArrayXXd &hop);
+	/**maximum hopping distance of the hopping matrix*/
+	static double maxd (const ArrayXXd &hop);
+	
+	/**maximum value of the hopping matrix*/
+	static double maxval (const ArrayXXd &hop);
+	
+	/**minimum value of the hopping matrix*/
+	static double minval (const ArrayXXd &hop);
+	
+	static string hoppingInfo (const ArrayXXd &hop);
 	
 	/**Coefficients for the Fourier transform in y-direction.*/
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY) const;
@@ -216,7 +224,7 @@ FTy_phases (int x, int iky, bool PARITY) const
 }
 
 double Geometry2D::
-avg (const ArrayXXd &hop)
+avgd (const ArrayXXd &hop)
 {
 	double res = 0.;
 	
@@ -251,7 +259,7 @@ sigma (const ArrayXXd &hop)
 }
 
 double Geometry2D::
-max (const ArrayXXd &hop)
+maxd (const ArrayXXd &hop)
 {
 	double res = 0;
 	
@@ -262,6 +270,46 @@ max (const ArrayXXd &hop)
 	}
 	
 	return res;
+}
+
+double Geometry2D::
+maxval (const ArrayXXd &hop)
+{
+	double res = std::numeric_limits<double>::lowest();
+	
+	for (int i=0; i<hop.rows(); ++i)
+	for (int j=i; j<hop.cols(); ++j)
+	{
+		if (hop(i,j) > res) res = hop(i,j);
+	}
+	
+	return res;
+}
+
+double Geometry2D::
+minval (const ArrayXXd &hop)
+{
+	double res = std::numeric_limits<double>::max();
+	
+	for (int i=0; i<hop.rows(); ++i)
+	for (int j=i; j<hop.cols(); ++j)
+	{
+		if (hop(i,j) < res) res = hop(i,j);
+	}
+	
+	return res;
+}
+
+string Geometry2D::
+hoppingInfo (const ArrayXXd &hop)
+{
+	stringstream ss;
+	ss << "avgd=" << round(avgd(hop),2)
+	   << ",σd=" << round(sigma(hop),2) 
+	   << ",maxd=" << round(maxd(hop),2) 
+	   << ",minv=" << minval(hop)
+	   << ",maxv=" << maxval(hop);
+	return ss.str();
 }
 
 #endif
