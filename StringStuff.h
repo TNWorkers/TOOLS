@@ -6,6 +6,7 @@
 #include <vector>
 #include <clocale>
 #include <cstdlib>
+#include <iomanip>
 
 void draw_progressBar (int len, double percent)
 {
@@ -56,7 +57,7 @@ template<typename Scalar, typename IntType>
 std::string pad_zeros (Scalar x, IntType N_zeros)
 {
 	std::ostringstream out;
-	out << std::setfill('0') << setw(N_zeros) << x;
+	out << std::setfill('0') << std::setw(N_zeros) << x;
 	return out.str();
 }
 

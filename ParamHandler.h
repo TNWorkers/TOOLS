@@ -13,6 +13,7 @@ struct param0d
 {
 	Scalar x;
 	string label;
+	inline Scalar operator() () const {return x;}
 };
 
 template<typename Scalar>

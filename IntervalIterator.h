@@ -5,6 +5,8 @@
 //#include "gsl_integration.h"
 #include <iostream>
 #include <complex>
+#include <limits>
+#include <iomanip>
 
 #include <Eigen/Dense>
 
@@ -13,8 +15,16 @@
 
 inline double uniformGrid (int index, double xmin, double xmax, int xpoints)
 {
-	double step = (xmax-xmin)/(xpoints-1);
-	return xmin + index*step;
+	if (xpoints == 1)
+	{
+		assert(abs(xmin-xmax)<numeric_limits<double>::epsilon());
+		return xmin;
+	}
+	else
+	{
+		double step = (xmax-xmin)/(xpoints-1);
+		return xmin + index*step;
+	}
 }
 
 class IntervalIterator
@@ -105,14 +115,14 @@ public:
 	void save (std::string dumpfile, int i);
 	void save (std::string dumpfile, int imin, int imax);
 	void save_EigenMatrix (std::string dumpfile, const Eigen::MatrixXd &M);
-	void save_values (std::string dumpfile);
+	void save_abscissa (std::string dumpfile);
 	
 	void reset (double xmin_input, double xmax_input, int xpoints_input);
 	
 	void print_status();
 	string info();
 	
-	Eigen::VectorXd get_values() const;
+	Eigen::VectorXd get_abscissa() const;
 	Eigen::MatrixXd get_data() const;
 	void set_data (const Eigen::MatrixXd &data_input);
 	inline int rows() {return data.rows();}
@@ -247,7 +257,7 @@ save_EigenMatrix (std::string dumpfile, const Eigen::MatrixXd &M)
 }
 
 void IntervalIterator::
-save_values (std::string dumpfile)
+save_abscissa (std::string dumpfile)
 {
 	std::ofstream file(dumpfile);
 	file << setprecision(14) << data.col(0) << endl;
@@ -330,7 +340,7 @@ backward_step()
 }
 
 inline Eigen::VectorXd IntervalIterator::
-get_values() const
+get_abscissa() const
 {
 	return data.col(0);
 }

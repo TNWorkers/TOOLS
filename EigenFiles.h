@@ -12,7 +12,7 @@
 
 #define MAXBUFSIZE ((int) 1e6)
 
-Eigen::MatrixXd readMatrix (const std::string filename)
+Eigen::Matrix<double,Dynamic,Dynamic> readMatrix (const std::string filename)
 {
 	int cols = 0;
 	int rows = 0;
@@ -27,7 +27,7 @@ Eigen::MatrixXd readMatrix (const std::string filename)
 	while (!infile.eof())
 	{
 		std::string line;
-		getline(infile, line);
+		getline(infile,line);
 		
 		if (line.length() > 0 and line.at(0) != '#')
 		{
@@ -43,22 +43,29 @@ Eigen::MatrixXd readMatrix (const std::string filename)
 	infile.close();
 	
 	// Populate matrix with numbers.
-	Eigen::MatrixXd result(rows,cols);
+	Eigen::Matrix<double,Dynamic,Dynamic> result(rows,cols);
 	for (int i=0; i<rows; i++)
 	for (int j=0; j<cols; j++)
+	{
 		result(i,j) = buff[cols*i+j];
+	}
 	
 	return result;
 };
 
-void saveMatrix (const Eigen::MatrixXd &M, const std::string filename)
+Eigen::Matrix<double,Dynamic,Dynamic> loadMatrix (const std::string filename)
+{
+	return readMatrix(filename);
+}
+
+void saveMatrix (const Eigen::Matrix<double,Dynamic,Dynamic> &M, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<M.rows(); ++i)
 	{
 		for (int j=0; j<M.cols(); ++j)
 		{
-			fout << setprecision(16) << M(i,j);
+			fout << setprecision(14) << M(i,j);
 			if (j != M.cols() - 1)
 			{
 				fout << "\t";
@@ -70,7 +77,58 @@ void saveMatrix (const Eigen::MatrixXd &M, const std::string filename)
 		}
 	}
 	fout.close();
+	if (PRINT) {lout << "saved to: " << filename << endl;}
 };
+
+void saveMatrix_cpython (const Eigen::Matrix<complex<double>,Dynamic,Dynamic> &M, const std::string filename, bool PRINT = true)
+{
+	ofstream fout(filename);
+	for (int i=0; i<M.rows(); ++i)
+	{
+		for (int j=0; j<M.cols(); ++j)
+		{
+			fout << setprecision(14) << M(i,j).real();
+			if (M(i,j).imag() > 0.) fout << "+";
+			fout << M(i,j).imag() << "j";
+			
+//			fout << setprecision(14) << M(i,j);
+			
+			if (j != M.cols() - 1)
+			{
+				fout << "\t";
+			}
+			else
+			{
+				fout << endl;
+			}
+		}
+	}
+	fout.close();
+	if (PRINT) {lout << "saved to: " << filename << endl;}
+};
+
+void save_xy (const Eigen::Array<double,Dynamic,1> &x, const Eigen::Array<double,Dynamic,1> &y, const std::string filename, bool PRINT = true)
+{
+	ofstream fout(filename);
+	for (int i=0; i<x.rows(); ++i)
+	{
+		fout << setprecision(14) << x(i) << "\t" << y(i) << endl;
+	}
+	fout.close();
+	if (PRINT) {lout << "saved to: " << filename << endl;}
+}
+
+void save_xy (const Eigen::Array<double,Dynamic,1> &x, const Eigen::Array<double,Dynamic,1> &y1, 
+              const Eigen::Array<double,Dynamic,1> &y2, const std::string filename, bool PRINT = true)
+{
+	ofstream fout(filename);
+	for (int i=0; i<x.rows(); ++i)
+	{
+		fout << setprecision(14) << x(i) << "\t" << y1(i) << "\t" << y2(i) << endl;
+	}
+	fout.close();
+	if (PRINT) {lout << "saved to: " << filename << endl;}
+}
 
 //inline bool fileExists (const std::string& filename)
 //{
