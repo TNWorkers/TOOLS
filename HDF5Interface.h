@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <assert.h>
+#include <filesystem>
 #include <H5Cpp.h> // compile with -lhdf5 -lhdf5_cpp
 
 #include <Eigen/Dense>
@@ -108,19 +109,23 @@ close()
 }
 
 void HDF5Interface::
-create_group(std::string grp_name)
+create_group (std::string grp_name)
 {
-	try {file->createGroup(grp_name.c_str());}
-	catch(...) {}
+	if (!HAS_GROUP(grp_name))
+	{
+		try {file->createGroup(grp_name.c_str());}
+		catch(...) {}
+	}
 }
 
 bool HDF5Interface::
-HAS_GROUP(std::string grp_name)
+HAS_GROUP (std::string grp_name)
 {
-	bool out = true;
-	try {file->openGroup(grp_name.c_str());}
-	catch(...) {out = false;}
-	return out;
+//	bool out = true;
+//	try {file->openGroup(grp_name.c_str());}
+//	catch(...) {out = false;}
+//	return out;
+	return H5Lexists(file->getId(), grp_name.c_str(), H5P_DEFAULT) > 0;
 }
 
 template<typename ScalarType>
@@ -136,7 +141,7 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 	hsize_t dimensions[dimensions_size]; dimensions[0] = mat.rows(); dimensions[1] = mat.cols();
 	H5::DataSpace space(dimensions_size, dimensions);
 	H5::IntType datatype(native_type<ScalarType>());
-
+	
 	H5::DataSet dataset;
 	if (grp_name != "")
 	{
@@ -332,7 +337,7 @@ load_scalar (ScalarType &x, std::string setname, std::string grp_name)
 	{
 		dataset = file->openDataSet(setname);
 	}
-
+	
 	H5::DataSpace dataspace = dataset.getSpace();
 	hsize_t length[] = {1};
 	H5::DataSpace double_memspace(1,length);
@@ -361,7 +366,7 @@ save_scalar (ScalarType x, std::string setname, std::string grp_name)
 	H5::DataSpace space(1,length);
 	H5::IntType datatype(native_type<ScalarType>());
 	ScalarType x_as_array[] = {x};
-
+	
 	H5::DataSet dataset;
 	if (grp_name != "")
 	{
