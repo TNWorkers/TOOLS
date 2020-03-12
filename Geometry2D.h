@@ -1,6 +1,12 @@
 #ifndef GEOMETRY2D
 #define GEOMETRY2D
 
+#include <numeric>
+
+#include <Eigen/Dense>
+
+#include "Lattice2D.h"
+
 enum TRAVERSE2D {CHESSBOARD, SNAKE};
 
 class Geometry2D
@@ -8,19 +14,19 @@ class Geometry2D
 public:
 	
 	/**constant coupling λ*/
-	Geometry2D (TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda=1., bool PERIODIC_Y=false);
+	Geometry2D (const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda=1.);
 	
-	/**constant couplings λx and λy*/
-	Geometry2D (TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda_x, double lambda_y, bool PERIODIC_Y=false);
+	// /**constant couplings λx and λy*/
+	// Geometry2D (const Lattice<2> &lattice_input, TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda_x, double lambda_y, bool PERIODIC_Y=false);
 	
-	/**arbitrary couplings (coupling_y is of size Ly+1 and the last element sets the boundary condition)*/
-	Geometry2D (TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coupling_x, const ArrayXd coupling_y);
-	
-	/**return hopping matrix*/
-	ArrayXXd hopping() const {return HoppingMatrix;}
+	// /**arbitrary couplings (coupling_y is of size Ly+1 and the last element sets the boundary condition)*/
+	// Geometry2D (const Lattice<2> &lattice_in, TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coupling_x, const ArrayXd coupling_y);
 	
 	/**return hopping matrix*/
-	static vector<vector<std::pair<size_t,double> > > rangeFormat (const ArrayXXd &hop);
+	Eigen::ArrayXXd hopping() const {return HoppingMatrix;}
+	
+	/**return hopping matrix*/
+	static vector<vector<std::pair<size_t,double> > > rangeFormat (const Eigen::ArrayXXd &hop);
 	
 	/**access x,y(index)*/
 	inline pair<int,int> operator() (int i)        const {return coord.at(i);}
@@ -29,24 +35,24 @@ public:
 	inline int           operator() (int i, int j) const {return index.at(make_pair(i,j));}
 	
 	/**all x coordinates at a given iy*/
-	ArrayXd x_row (int iy) const;
+	Eigen::ArrayXd x_row (int iy) const;
 	
 	/**average distance of the hopping matrix*/
-	static double avgd (const ArrayXXd &hop);
+	static double avgd (const Eigen::ArrayXXd &hop);
 	
 	/**standard deviation of the distance in the hopping matrix*/
-	static double sigma (const ArrayXXd &hop);
+	static double sigma (const Eigen::ArrayXXd &hop);
 	
 	/**maximum hopping distance of the hopping matrix*/
-	static double maxd (const ArrayXXd &hop);
+	static double maxd (const Eigen::ArrayXXd &hop);
 	
 	/**maximum value of the hopping matrix*/
-	static double maxval (const ArrayXXd &hop);
+	static double maxval (const Eigen::ArrayXXd &hop);
 	
 	/**minimum value of the hopping matrix*/
-	static double minval (const ArrayXXd &hop);
+	static double minval (const Eigen::ArrayXXd &hop);
 	
-	static string hoppingInfo (const ArrayXXd &hop);
+	static string hoppingInfo (const Eigen::ArrayXXd &hop);
 	
 	/**Coefficients for the Fourier transform in y-direction.*/
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY) const;
@@ -54,87 +60,79 @@ public:
 private:
 	
 	TRAVERSE2D path;
-	int Lx=1, Ly=1;
 	
-	ArrayXXd HoppingMatrix;
+	Eigen::ArrayXXd HoppingMatrix;
 	
 	map<pair<int,int>,int> index;
 	map<int,pair<int,int>> coord;
 	
-	void fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y);
+	void fill_HoppingMatrix ();
+
+	Lattice2D lattice;
+
+	double coupling_neighbor;
 };
 
 Geometry2D::
-Geometry2D(TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda, bool PERIODIC_Y)
-:path(path_input), Lx(Lx_input), Ly(Ly_input)
+Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda)
+	:path(path_input), coupling_neighbor(lambda), lattice(lattice_input)
 {
-	ArrayXd coupling_x(Lx);
-	ArrayXd coupling_y;
-	
-	if (PERIODIC_Y)
-	{
-		coupling_y.resize(Ly+1);
-	}
-	else
-	{
-		coupling_y.resize(Ly);
-	}
-	
-	coupling_x = lambda;
-	coupling_y = lambda;
-	
-	fill_HoppingMatrix(coupling_x,coupling_y);
+	fill_HoppingMatrix();
 }
 
-Geometry2D::
-Geometry2D(TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda_x, double lambda_y, bool PERIODIC_Y)
-:path(path_input), Lx(Lx_input), Ly(Ly_input)
-{
-	ArrayXd coupling_x(Lx);
-	ArrayXd coupling_y;
+// Geometry2D::
+// Geometry2D(const Lattice<2> &lattice_input, TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda_x, double lambda_y, bool PERIODIC_Y, double coupling_triangular_input)
+// :lattice(lattice_input),path(path_input), Lx(Lx_input), Ly(Ly_input), coupling_triangular(coupling_triangular_input)
+// {
+// 	if (abs(coupling_triangular) > std::numeric_limits<double>::epsilon()) { TRIANGULAR = true; }
 	
-	if (PERIODIC_Y)
-	{
-		coupling_y.resize(Ly+1);
-	}
-	else
-	{
-		coupling_y.resize(Ly);
-	}
+// 	ArrayXd coupling_x(Lx);
+// 	ArrayXd coupling_y;
 	
-	coupling_x = lambda_x;
-	coupling_y = lambda_y;
+// 	if (PERIODIC_Y)
+// 	{
+// 		coupling_y.resize(Ly+1);
+// 	}
+// 	else
+// 	{
+// 		coupling_y.resize(Ly);
+// 	}
 	
-	fill_HoppingMatrix(coupling_x,coupling_y);
-}
+// 	coupling_x = lambda_x;
+// 	coupling_y = lambda_y;
+	
+// 	fill_HoppingMatrix(coupling_x,coupling_y);
+// }
 
-Geometry2D::
-Geometry2D(TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coupling_x, const ArrayXd coupling_y)
-:path(path_input), Lx(Lx_input), Ly(Ly_input)
-{
-	fill_HoppingMatrix(coupling_x,coupling_y);
-}
+// Geometry2D::
+// Geometry2D(const Lattice<2> &lattice_input, TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coupling_x, const ArrayXd coupling_y, double coupling_triangular_input)
+// :lattice(lattice_input),path(path_input), Lx(Lx_input), Ly(Ly_input), coupling_triangular(coupling_triangular_input)
+// {
+// 	if (abs(coupling_triangular) > std::numeric_limits<double>::epsilon()) { TRIANGULAR = true; }
+
+// 	fill_HoppingMatrix(coupling_x,coupling_y);
+// }
 
 void Geometry2D::
-fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
+fill_HoppingMatrix ()
 {
-	if (Lx==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
+	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
-	HoppingMatrix.resize(Lx*Ly,Lx*Ly); HoppingMatrix.setZero();
+	HoppingMatrix.resize(lattice.volume(),lattice.volume()); HoppingMatrix.setZero();
 	
 	// Mirrors the y coordinate to create a snake.
 	auto mirror = [this] (int iy) -> int
 	{
-		vector<int> v(Ly);
-		iota (begin(v),end(v),0);
+		vector<int> v(lattice.size(1));
+		std::iota (begin(v),end(v),0);
 		reverse(v.begin(),v.end());
 		return v[iy];
 	};
 	
-	for (int ix=0; ix<Lx; ++ix)
-	for (int iy=0; iy<Ly; ++iy)
-	for (int jx=0; jx<Lx; ++jx)
-	for (int jy=0; jy<Ly; ++jy)
+	for (int ix=0; ix<lattice.size(0); ++ix)
+	for (int iy=0; iy<lattice.size(1); ++iy)
+	for (int jx=0; jx<lattice.size(0); ++jx)
+	for (int jy=0; jy<lattice.size(1); ++jy)
 	{
 		int iy_=iy, jy_=jy;
 		if (path == SNAKE)
@@ -144,8 +142,8 @@ fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
 			jy_ = (jx%2==0)? jy : mirror(jy);
 		}
 		// the index is calculated normally:
-		int index_i = iy+Ly*ix;
-		int index_j = jy+Ly*jx;
+		int index_i = iy+lattice.size(1)*ix;
+		int index_j = jy+lattice.size(1)*jx;
 		
 		// but is stored together with the mirrored y_:
 		if (jx == 0 and jy == 0)
@@ -155,23 +153,38 @@ fill_HoppingMatrix (const ArrayXd coupling_x, const ArrayXd coupling_y)
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 		}
 		
-		if (abs(ix-jx) == 1 and (iy_==jy_))
+		if (lattice.ARE_NEIGHBORS( {ix,iy},{jx,jy} ))
 		{
-			HoppingMatrix(index_i,index_j) += coupling_x(ix);
+			HoppingMatrix(index_i,index_j) += coupling_neighbor;
 		}
-		else if (abs(iy_-jy_) == 1 and (ix==jx))
-		{
-			HoppingMatrix(index_i,index_j) += coupling_y(iy_);
-		}
-		else if (abs(iy_-jy_) == Ly-1 and (ix==jx) and Ly>2)
-		{
-			HoppingMatrix(index_i,index_j) += coupling_y(Ly);
-		}
+		
+
+		// if (abs(ix-jx) == 1 and (iy_==jy_))
+		// {
+		// 	HoppingMatrix(index_i,index_j) += coupling_x(ix);
+		// }
+		// else if (abs(iy_-jy_) == 1 and (ix==jx))
+		// {
+		// 	HoppingMatrix(index_i,index_j) += coupling_y(iy_);
+		// }
+		// else if (TRIANGULAR and ((ix-jx == 1 and iy_-jy_ == -1) or (ix-jx == -1 and iy_-jy_ == 1)))
+		// {
+		// 	HoppingMatrix(index_i,index_j) += coupling_triangular;
+		// }
+		// // else if (abs(iy_-jy_) == Ly-1 and (ix==jx) and Ly>2)
+		// // {
+		// // 	HoppingMatrix(index_i,index_j) += coupling_y(Ly);
+		// // }
+		// else if (TRIANGULAR and Ly>2 and ( (iy_-jy_ == Ly-1 and (ix-jx == -static_cast<int>(Ly/2)+1 or ix-jx == -static_cast<int>(Ly/2))) or (iy_-jy_ == 1-Ly and (ix-jx == static_cast<int>(Ly/2)-1 or ix-jx == static_cast<int>(Ly/2))) )  )
+		// {
+		// 	HoppingMatrix(index_i,index_j) += coupling_triangular;
+		// }
+
 	}
 }
 
 vector<vector<std::pair<size_t,double> > > Geometry2D::
-rangeFormat (const ArrayXXd &hop)
+rangeFormat (const Eigen::ArrayXXd &hop)
 {
 	vector<vector<std::pair<size_t,double> > > out(hop.rows());
 	
@@ -187,11 +200,11 @@ rangeFormat (const ArrayXXd &hop)
 	return out;
 }
 
-ArrayXd Geometry2D::
+Eigen::ArrayXd Geometry2D::
 x_row (int iy) const
 {
-	ArrayXd out(Lx);
-	for (int ix=0; ix<Lx; ++ix)
+	Eigen::ArrayXd out(lattice.size(0));
+	for (int ix=0; ix<lattice.size(0); ++ix)
 	{
 		out(ix) = index.at(make_pair(ix,iy));
 	}
@@ -201,22 +214,22 @@ x_row (int iy) const
 vector<complex<double> > Geometry2D::
 FTy_phases (int x, int iky, bool PARITY) const
 {
-	vector<complex<double> > out(Lx*Ly);
-	for (int l=0; l<Lx*Ly; ++l)
+	vector<complex<double> > out(lattice.volume());
+	for (int l=0; l<lattice.volume(); ++l)
 	{
 		out[l] = 0.;
 	}
 	
 	double sign = pow(-1.,PARITY);
-	double ky = iky * 2.*M_PI/Ly;
+	double ky = iky * 2.*M_PI/lattice.size(1);
 	
 //	cout << "iky=" << iky << ", ky=" << ky << endl;
 	
-	for (int y=0; y<Ly; ++y)
+	for (int y=0; y<lattice.size(1); ++y)
 	{
 		int i = index.at(make_pair(x,y));
 		
-		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(Ly);
+		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(lattice.size(0));
 		
 //		cout << "ky=" << ky << ", x=" << x << ", y=" << y << ", i=" << i << ", index.at(make_pair(x,y))=" << index.at(make_pair(x,y)) << ", val=" << out[i] << endl;
 	}
@@ -224,7 +237,7 @@ FTy_phases (int x, int iky, bool PARITY) const
 }
 
 double Geometry2D::
-avgd (const ArrayXXd &hop)
+avgd (const Eigen::ArrayXXd &hop)
 {
 	double res = 0.;
 	
@@ -240,7 +253,7 @@ avgd (const ArrayXXd &hop)
 }
 
 double Geometry2D::
-sigma (const ArrayXXd &hop)
+sigma (const Eigen::ArrayXXd &hop)
 {
 	double res = 0.;
 	
@@ -259,7 +272,7 @@ sigma (const ArrayXXd &hop)
 }
 
 double Geometry2D::
-maxd (const ArrayXXd &hop)
+maxd (const Eigen::ArrayXXd &hop)
 {
 	double res = 0;
 	
@@ -273,7 +286,7 @@ maxd (const ArrayXXd &hop)
 }
 
 double Geometry2D::
-maxval (const ArrayXXd &hop)
+maxval (const Eigen::ArrayXXd &hop)
 {
 	double res = std::numeric_limits<double>::lowest();
 	
@@ -287,7 +300,7 @@ maxval (const ArrayXXd &hop)
 }
 
 double Geometry2D::
-minval (const ArrayXXd &hop)
+minval (const Eigen::ArrayXXd &hop)
 {
 	double res = std::numeric_limits<double>::max();
 	
@@ -301,7 +314,7 @@ minval (const ArrayXXd &hop)
 }
 
 string Geometry2D::
-hoppingInfo (const ArrayXXd &hop)
+hoppingInfo (const Eigen::ArrayXXd &hop)
 {
 	stringstream ss;
 	ss << "avgd=" << round(avgd(hop),2)
