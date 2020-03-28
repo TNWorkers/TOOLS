@@ -1,6 +1,9 @@
 //code from github: https://gist.github.com/klemens-morgenstern/b75599292667a4f53007
 //klemens-morgenstern
 
+#ifndef JOINARRAY
+#define JOINARRAY
+
 namespace detail
 {
 template<std::size_t ... Size>
@@ -51,3 +54,5 @@ constexpr std::array<T, LL+RL> join(std::array<T, LL> rhs, std::array<T, RL> lhs
 }
 	
 }
+
+#endif

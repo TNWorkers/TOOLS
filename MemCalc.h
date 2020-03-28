@@ -59,4 +59,9 @@ inline double calc_memory (const Eigen::SparseVector<Scalar,0,Index> &V, MEMUNIT
 	return V.nonZeros() * (sizeof(Scalar)+sizeof(Index)) / memUnitVal[memunit_input];
 }
 
+inline double calc_memory (const std::string &s, MEMUNIT memunit_input=GB)
+{
+    return s.capacity() * sizeof(char) / memUnitVal[memunit_input];
+}
+
 #endif
