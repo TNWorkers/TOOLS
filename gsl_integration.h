@@ -373,7 +373,7 @@ complex<double> fouriergrate(complex<double> (*f_in)(double), double l, double r
 	gsl_integration_qawo (&FIm, l, err_abs, err_rel, 1000, w, w_sin, &resImSin, &errImSin);
 	gsl_integration_qawo (&FRe, l, err_abs, err_rel, 1000, w, w_sin, &resReSin, &errReSin);
 	gsl_integration_qawo (&FIm, l, err_abs, err_rel, 1000, w, w_cos, &resImCos, &errImCos);
-	return complex<double>(resReCos-resReSin,resReSin+resImCos);
+	return complex<double>(resReCos-resImSin,resReSin+resImCos);
 }
 
 #endif
