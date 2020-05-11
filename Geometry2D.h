@@ -28,11 +28,11 @@ public:
 	/**return hopping matrix*/
 	static vector<vector<std::pair<size_t,double> > > rangeFormat (const Eigen::ArrayXXd &hop);
 	
-	/**access x,y(index)*/
-	inline pair<int,int> operator() (int i)        const {return coord.at(i);}
+	/**access x,y,atom(index)*/
+	inline tuple<int,int,std::string> operator() (int i)        const {return coord.at(i);}
 	
-	/**access index(x,y)*/
-	inline int           operator() (int i, int j) const {return index.at(make_pair(i,j));}
+	/**access index(x,y,atom)*/
+	inline int           operator() (int i, int j, std::string atom="") const {return index.at(make_tuple(i,j,atom));}
 	
 	/**all x coordinates at a given iy*/
 	Eigen::ArrayXd x_row (int iy) const;
@@ -55,7 +55,7 @@ public:
 	static string hoppingInfo (const Eigen::ArrayXXd &hop);
 	
 	/**Coefficients for the Fourier transform in y-direction.*/
-	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY) const;
+	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY, std::string atom) const;
 	
 private:
 	
@@ -63,8 +63,8 @@ private:
 	
 	Eigen::ArrayXXd HoppingMatrix;
 	
-	map<pair<int,int>,int> index;
-	map<int,pair<int,int>> coord;
+	map<tuple<int,int,std::string>,int> index;
+	map<int,tuple<int,int,std::string>> coord;
 	
 	void fill_HoppingMatrix ();
 
@@ -118,7 +118,7 @@ fill_HoppingMatrix ()
 {
 	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
-	HoppingMatrix.resize(lattice.volume(),lattice.volume()); HoppingMatrix.setZero();
+	HoppingMatrix.resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix.setZero();
 	
 	// Mirrors the y coordinate to create a snake.
 	auto mirror = [this] (int iy) -> int
@@ -128,58 +128,45 @@ fill_HoppingMatrix ()
 		reverse(v.begin(),v.end());
 		return v[iy];
 	};
-	
+
 	for (int ix=0; ix<lattice.size(0); ++ix)
 	for (int iy=0; iy<lattice.size(1); ++iy)
 	for (int jx=0; jx<lattice.size(0); ++jx)
 	for (int jy=0; jy<lattice.size(1); ++jy)
 	{
-		int iy_=iy, jy_=jy;
-		if (path == SNAKE)
+		int countCellAtoms_i=-1;
+		for (const auto &[atom_i,position_i] : lattice.unitCell)
 		{
-			// mirror even y only
-			iy_ = (ix%2==0)? iy : mirror(iy);
-			jy_ = (jx%2==0)? jy : mirror(jy);
-		}
-		// the index is calculated normally:
-		int index_i = iy+lattice.size(1)*ix;
-		int index_j = jy+lattice.size(1)*jx;
+			countCellAtoms_i++;
+			int countCellAtoms_j=-1;
+			for (const auto &[atom_j,position_j] : lattice.unitCell)
+			{
+				countCellAtoms_j++;
+				int iy_=iy, jy_=jy;
+				if (path == SNAKE)
+				{
+					// mirror even y only
+					iy_ = (ix%2==0)? iy : mirror(iy);
+					jy_ = (jx%2==0)? jy : mirror(jy);
+				}
+				// the index is calculated normally:
+				int index_i = iy*lattice.unitCell.size()+lattice.size(1)*lattice.unitCell.size()*ix+countCellAtoms_i;
+				int index_j = jy*lattice.unitCell.size()+lattice.size(1)*lattice.unitCell.size()*jx+countCellAtoms_j;
 		
-		// but is stored together with the mirrored y_:
-		if (jx == 0 and jy == 0)
-		{
-			index[make_pair(ix,iy_)] = index_i;
-			coord[index_i] = make_pair(ix,iy_);
+				// but is stored together with the mirrored y_:
+				if (jx == 0 and jy == 0)
+				{
+					index[make_tuple(ix,iy_,atom_i)] = index_i;
+					coord[index_i] = make_tuple(ix,iy_,atom_i);
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
-		}
+				}
 		
-		if (lattice.ARE_NEIGHBORS( {ix,iy},{jx,jy} ))
-		{
-			HoppingMatrix(index_i,index_j) += coupling_neighbor;
+				if (lattice.ARE_NEIGHBORS( {ix,iy},{jx,jy}, atom_i, atom_j ))
+				{
+					HoppingMatrix(index_i,index_j) += coupling_neighbor;
+				}
+			}
 		}
-		
-
-		// if (abs(ix-jx) == 1 and (iy_==jy_))
-		// {
-		// 	HoppingMatrix(index_i,index_j) += coupling_x(ix);
-		// }
-		// else if (abs(iy_-jy_) == 1 and (ix==jx))
-		// {
-		// 	HoppingMatrix(index_i,index_j) += coupling_y(iy_);
-		// }
-		// else if (TRIANGULAR and ((ix-jx == 1 and iy_-jy_ == -1) or (ix-jx == -1 and iy_-jy_ == 1)))
-		// {
-		// 	HoppingMatrix(index_i,index_j) += coupling_triangular;
-		// }
-		// // else if (abs(iy_-jy_) == Ly-1 and (ix==jx) and Ly>2)
-		// // {
-		// // 	HoppingMatrix(index_i,index_j) += coupling_y(Ly);
-		// // }
-		// else if (TRIANGULAR and Ly>2 and ( (iy_-jy_ == Ly-1 and (ix-jx == -static_cast<int>(Ly/2)+1 or ix-jx == -static_cast<int>(Ly/2))) or (iy_-jy_ == 1-Ly and (ix-jx == static_cast<int>(Ly/2)-1 or ix-jx == static_cast<int>(Ly/2))) )  )
-		// {
-		// 	HoppingMatrix(index_i,index_j) += coupling_triangular;
-		// }
-
 	}
 }
 
@@ -203,16 +190,17 @@ rangeFormat (const Eigen::ArrayXXd &hop)
 Eigen::ArrayXd Geometry2D::
 x_row (int iy) const
 {
-	Eigen::ArrayXd out(lattice.size(0));
+	Eigen::ArrayXd out(lattice.size(0)*lattice.unitCell.size());
 	for (int ix=0; ix<lattice.size(0); ++ix)
+	for (const auto &[atom,position]: lattice.unitCell)
 	{
-		out(ix) = index.at(make_pair(ix,iy));
+		out(ix) = index.at(make_tuple(ix,iy,atom));
 	}
 	return out;
 }
 
 vector<complex<double> > Geometry2D::
-FTy_phases (int x, int iky, bool PARITY) const
+FTy_phases (int x, int iky, bool PARITY, std::string atom="") const
 {
 	vector<complex<double> > out(lattice.volume());
 	for (int l=0; l<lattice.volume(); ++l)
@@ -227,9 +215,9 @@ FTy_phases (int x, int iky, bool PARITY) const
 	
 	for (int y=0; y<lattice.size(1); ++y)
 	{
-		int i = index.at(make_pair(x,y));
+		int i = index.at(make_tuple(x,y,atom));
 		
-		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(lattice.size(0));
+		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(lattice.size(1));
 		
 //		cout << "ky=" << ky << ", x=" << x << ", y=" << y << ", i=" << i << ", index.at(make_pair(x,y))=" << index.at(make_pair(x,y)) << ", val=" << out[i] << endl;
 	}
