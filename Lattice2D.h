@@ -7,10 +7,17 @@
 #include "numeric_limits.h"
 
 enum LatticeType
-	{
-	 SQUARE=0,
-	 TRIANG=1
-	};
+{
+	SQUARE=0,
+	TRIANG=1
+};
+
+std::ostream& operator<< (std::ostream& s, LatticeType lattice)
+{
+	if      (lattice==SQUARE)     {s << "square";}
+	else if (lattice==TRIANG)     {s << "triangular";}
+	return s;
+}
 
 // template<size_t dim=2>
 class Lattice2D
@@ -39,16 +46,16 @@ public:
 	std::string name() const {return name_;}
 
 	std::unordered_map<std::string,Eigen::Matrix<double,dim,1> > unitCell;
-protected:
-	
-	array<size_t,dim> L;
-	
+
 	//unit vectors of the lattice
 	array<Eigen::Matrix<double,dim,1>,dim> a;
 
 	//unit vectors of the reciprocal lattice
 	array<Eigen::Matrix<double,dim,1>,dim> b;
 
+protected:
+	
+	array<size_t,dim> L;
 	
 	//origin of the coordinate system
 	Eigen::Matrix<double,dim,1> origin;
@@ -103,21 +110,56 @@ ARE_NEIGHBORS(Site i, Site j, std::string atom_i="", std::string atom_j="") cons
 	auto it_i = unitCell.find(atom_i);
 	auto it_j = unitCell.find(atom_j);
 	assert(it_i != unitCell.end() and it_j != unitCell.end() and "You specified an atom in the unit cell which does not exist.");
-	auto Ri = i[0]*a[0] + i[1]*a[1] + unitCell.at(atom_i);
-	auto Rj = j[0]*a[0] + j[1]*a[1] + unitCell.at(atom_j);
+	Eigen::Matrix<double,dim,1> Ri = i[0]*a[0] + i[1]*a[1] + unitCell.at(atom_i);
+	Eigen::Matrix<double,dim,1> Rj = j[0]*a[0] + j[1]*a[1] + unitCell.at(atom_j);
 	double distance = (Ri - Rj).norm();
 	if (abs(distance-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+
 	if (PERIODIC[1] and L[1] > 2)
 		{
 			//shift R_i into the super cell above the current super cell
-			auto Ri_upshift = i[0]*a[0] + (i[1]+L[1])*a[1] + unitCell.at(atom_i);
+			Eigen::Matrix<double,dim,1> Ri_upshift = i[0]*a[0] + (i[1]+L[1])*a[1] + unitCell.at(atom_i);
 			double distance_upshift = (Ri_upshift - Rj).norm();
 			if (abs(distance_upshift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
 
 			//shift R_i into the super cell below the current super cell
-			auto Ri_downshift = i[0]*a[0] + (i[1]-L[1])*a[1] + unitCell.at(atom_i);
+			Eigen::Matrix<double,dim,1> Ri_downshift = i[0]*a[0] + (i[1]-static_cast<int>(L[1]))*a[1] + unitCell.at(atom_i);
 			double distance_downshift = (Ri_downshift - Rj).norm();
 			if (abs(distance_downshift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+		}
+	if (PERIODIC[0] and L[0] > 2)
+		{
+			//shift R_i into the super cell right of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_rightshift = (i[0]+L[0])*a[0] + i[1]*a[1] + unitCell.at(atom_i);
+			double distance_rightshift = (Ri_rightshift - Rj).norm();
+			if (abs(distance_rightshift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+
+			//shift R_i into the super cell left of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_leftshift = (i[0]-static_cast<int>(L[0]))*a[0] + i[1]*a[1] + unitCell.at(atom_i);
+			double distance_leftshift = (Ri_leftshift - Rj).norm();
+			if (abs(distance_leftshift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}			
+		}
+	if ( (PERIODIC[0] and L[0] > 2) and (PERIODIC[1] and L[1] > 2) )
+		{
+			//shift R_i into the super cell above and right of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_ru_shift = (i[0]+L[0])*a[0] + (i[1]+L[1])*a[1] + unitCell.at(atom_i);
+			double distance_ru_shift = (Ri_ru_shift - Rj).norm();
+			if (abs(distance_ru_shift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+
+			//shift R_i into the super cell above and left of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_lu_shift = (i[0]-static_cast<int>(L[0]))*a[0] + (i[1]+L[1])*a[1] + unitCell.at(atom_i);
+			double distance_lu_shift = (Ri_lu_shift - Rj).norm();
+			if (abs(distance_lu_shift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+
+			//shift R_i into the super cell below and right of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_rb_shift = (i[0]+L[0])*a[0] + (i[1]-static_cast<int>(L[1]))*a[1] + unitCell.at(atom_i);
+			double distance_rb_shift = (Ri_rb_shift - Rj).norm();
+			if (abs(distance_rb_shift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
+
+			//shift R_i into the super cell below and left of the current super cell
+			Eigen::Matrix<double,dim,1> Ri_lb_shift = (i[0]-static_cast<int>(L[0]))*a[0] + (i[1]-static_cast<int>(L[1]))*a[1] + unitCell.at(atom_i);
+			double distance_lb_shift = (Ri_lb_shift - Rj).norm();
+			if (abs(distance_lb_shift-neighbor_difference) < mynumeric_limits<double>::epsilon()) {return true;}
 		}
 	return false;
 }

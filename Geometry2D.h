@@ -56,7 +56,8 @@ public:
 	
 	/**Coefficients for the Fourier transform in y-direction.*/
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY, std::string atom) const;
-	
+
+	std::size_t numberOfBonds() const {return number_of_bonds;}
 private:
 	
 	TRAVERSE2D path;
@@ -71,6 +72,8 @@ private:
 	Lattice2D lattice;
 
 	double coupling_neighbor;
+
+	std::size_t number_of_bonds;
 };
 
 Geometry2D::
@@ -116,6 +119,7 @@ Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda)
 void Geometry2D::
 fill_HoppingMatrix ()
 {
+	number_of_bonds = 0ul;
 	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
 	HoppingMatrix.resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix.setZero();
@@ -160,14 +164,17 @@ fill_HoppingMatrix ()
 					coord[index_i] = make_tuple(ix,iy_,atom_i);
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 				}
-		
-				if (lattice.ARE_NEIGHBORS( {ix,iy},{jx,jy}, atom_i, atom_j ))
-				{
+
+				if (lattice.ARE_NEIGHBORS( {ix,iy_},{jx,jy_}, atom_i, atom_j ))
+				{					
 					HoppingMatrix(index_i,index_j) += coupling_neighbor;
+					number_of_bonds++;
 				}
 			}
 		}
 	}
+	assert(number_of_bonds%2 == 0);
+	number_of_bonds = static_cast<size_t>(number_of_bonds/2);
 }
 
 vector<vector<std::pair<size_t,double> > > Geometry2D::
