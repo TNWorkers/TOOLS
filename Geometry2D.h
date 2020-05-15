@@ -129,7 +129,7 @@ fill_HoppingMatrix (size_t range)
 	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
 	HoppingMatrix[range-1].resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix[range-1].setZero();
-	if (coupling_neighbor[range-1] > 1.e-8) {return;}
+	if (coupling_neighbor[range-1] < 1.e-8) {return;}
 	
 	// Mirrors the y coordinate to create a snake.
 	auto mirror = [this] (int iy) -> int
