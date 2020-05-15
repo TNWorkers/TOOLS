@@ -10,6 +10,27 @@
 #include <gsl/gsl_integration.h>
 using namespace std;
 
+// Taken from: https://stackoverflow.com/questions/13289311/c-function-pointers-with-c11-lambdas/18413206#18413206
+template<typename F> class gsl_function_pp : public gsl_function
+{
+public:
+	
+	gsl_function_pp (const F& func)
+	:_func(func)
+	{
+		function = &gsl_function_pp::invoke;
+		params = this;
+	}
+	
+private:
+	
+	const F& _func;
+	static double invoke (double x, void *params)
+	{
+		return static_cast<gsl_function_pp*>(params)->_func(x);
+	}
+};
+
 struct integration_params
 {
 	double xl; // left x-value
@@ -361,18 +382,38 @@ complex<double> integrate(complex<double> (*f_in)(double,double), double xl, dou
 // integrate complex function Re(f(t))+i(Imf(t)) times complex exp(i*omega*t)
 complex<double> fouriergrate(complex<double> (*f_in)(double), double l, double r, double err_rel, double err_abs, double omega)
 {
-	gsl_integration_workspace * w = gsl_integration_workspace_alloc(1000);
-	gsl_integration_qawo_table * w_sin = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_SINE, 1000);
-	gsl_integration_qawo_table * w_cos = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_COSINE, 1000);
+	gsl_integration_workspace * w = gsl_integration_workspace_alloc(GSL_WORKSPACE_SIZE);
+	gsl_integration_qawo_table * w_sin = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_SINE, GSL_WORKSPACE_SIZE);
+	gsl_integration_qawo_table * w_cos = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_COSINE, GSL_WORKSPACE_SIZE);
 	GSL_COMPLEX_wrapper::set_function(f_in);
 	gsl_function FRe, FIm;
 	FRe.function = GSL_COMPLEX_wrapper::wrap_around_gsl_Re;
 	FIm.function = GSL_COMPLEX_wrapper::wrap_around_gsl_Im;
 	double resReCos, resImSin, errReCos, errImSin, resReSin, resImCos, errReSin, errImCos;
-	gsl_integration_qawo (&FRe, l, err_abs, err_rel, 1000, w, w_cos, &resReCos, &errReCos);
-	gsl_integration_qawo (&FIm, l, err_abs, err_rel, 1000, w, w_sin, &resImSin, &errImSin);
-	gsl_integration_qawo (&FRe, l, err_abs, err_rel, 1000, w, w_sin, &resReSin, &errReSin);
-	gsl_integration_qawo (&FIm, l, err_abs, err_rel, 1000, w, w_cos, &resImCos, &errImCos);
+	gsl_integration_qawo (&FRe, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_cos, &resReCos, &errReCos);
+	gsl_integration_qawo (&FIm, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_sin, &resImSin, &errImSin);
+	gsl_integration_qawo (&FRe, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_sin, &resReSin, &errReSin);
+	gsl_integration_qawo (&FIm, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_cos, &resImCos, &errImCos);
+	gsl_integration_qawo_table_free(w_sin);
+	gsl_integration_qawo_table_free(w_cos);
+	gsl_integration_workspace_free(w);
+	return complex<double>(resReCos-resImSin,resReSin+resImCos);
+}
+
+complex<double> fouriergrate(gsl_function &FRe, gsl_function &FIm, double l, double r, double err_rel, double err_abs, double omega)
+{
+	gsl_integration_workspace * w = gsl_integration_workspace_alloc(GSL_WORKSPACE_SIZE);
+	gsl_integration_qawo_table * w_sin = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_SINE, GSL_WORKSPACE_SIZE);
+	gsl_integration_qawo_table * w_cos = gsl_integration_qawo_table_alloc (omega, r-l, GSL_INTEG_COSINE, GSL_WORKSPACE_SIZE);
+	double resReCos, resImSin, errReCos, errImSin, resReSin, resImCos, errReSin, errImCos;
+	gsl_integration_qawo (&FRe, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_cos, &resReCos, &errReCos);
+	gsl_integration_qawo (&FIm, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_sin, &resImSin, &errImSin);
+	gsl_integration_qawo (&FRe, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_sin, &resReSin, &errReSin);
+	gsl_integration_qawo (&FIm, l, err_abs, err_rel, GSL_WORKSPACE_SIZE, w, w_cos, &resImCos, &errImCos);
+//	cout << "errors=" << errReCos << ", " << errImCos << ", " << resReSin << ", " << resImSin << endl;
+	gsl_integration_qawo_table_free(w_sin);
+	gsl_integration_qawo_table_free(w_cos);
+	gsl_integration_workspace_free(w);
 	return complex<double>(resReCos-resImSin,resReSin+resImCos);
 }
 
