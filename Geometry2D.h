@@ -14,7 +14,7 @@ class Geometry2D
 public:
 	
 	/**constant coupling λ*/
-	Geometry2D (const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda=1.);
+	Geometry2D (const Lattice2D &lattice_input, TRAVERSE2D path_input, vector<double> lambda={1.});
 	
 	// /**constant couplings λx and λy*/
 	// Geometry2D (const Lattice<2> &lattice_input, TRAVERSE2D path_input, int Lx_input, int Ly_input, double lambda_x, double lambda_y, bool PERIODIC_Y=false);
@@ -23,7 +23,7 @@ public:
 	// Geometry2D (const Lattice<2> &lattice_in, TRAVERSE2D path_input, int Lx_input, int Ly_input, const ArrayXd coupling_x, const ArrayXd coupling_y);
 	
 	/**return hopping matrix*/
-	Eigen::ArrayXXd hopping() const {return HoppingMatrix;}
+	Eigen::ArrayXXd hopping(size_t range=1ul) const {assert(range>0 and range<=coupling_neighbor.size()); return HoppingMatrix[range-1];}
 	
 	/**return hopping matrix*/
 	static vector<vector<std::pair<size_t,double> > > rangeFormat (const Eigen::ArrayXXd &hop);
@@ -62,25 +62,30 @@ private:
 	
 	TRAVERSE2D path;
 	
-	Eigen::ArrayXXd HoppingMatrix;
+	vector<Eigen::ArrayXXd> HoppingMatrix;
 	
 	map<tuple<int,int,std::string>,int> index;
 	map<int,tuple<int,int,std::string>> coord;
 	
-	void fill_HoppingMatrix ();
+	void fill_HoppingMatrix (size_t range=1ul);
 
 	Lattice2D lattice;
 
-	double coupling_neighbor;
+	vector<double> coupling_neighbor;
 
 	std::size_t number_of_bonds;
 };
 
 Geometry2D::
-Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda)
+Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, vector<double> lambda)
 	:path(path_input), coupling_neighbor(lambda), lattice(lattice_input)
 {
-	fill_HoppingMatrix();
+	number_of_bonds = 0ul;
+	HoppingMatrix.resize(coupling_neighbor.size());
+	for (size_t range=0; range<coupling_neighbor.size(); range++)
+	{
+		fill_HoppingMatrix(range+1);
+	}
 }
 
 // Geometry2D::
@@ -117,12 +122,14 @@ Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, double lambda)
 // }
 
 void Geometry2D::
-fill_HoppingMatrix ()
+fill_HoppingMatrix (size_t range)
 {
-	number_of_bonds = 0ul;
+	assert(range>0 and range<=coupling_neighbor.size());
+	
 	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
-	HoppingMatrix.resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix.setZero();
+	HoppingMatrix[range-1].resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix[range-1].setZero();
+	if (coupling_neighbor[range-1] > 1.e-8) {return;}
 	
 	// Mirrors the y coordinate to create a snake.
 	auto mirror = [this] (int iy) -> int
@@ -165,9 +172,9 @@ fill_HoppingMatrix ()
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 				}
 
-				if (lattice.ARE_NEIGHBORS( {ix,iy_},{jx,jy_}, atom_i, atom_j ))
+				if (lattice.ARE_NEIGHBORS( {ix,iy_},{jx,jy_}, atom_i, atom_j, range))
 				{					
-					HoppingMatrix(index_i,index_j) += coupling_neighbor;
+					HoppingMatrix[range-1](index_i,index_j) += coupling_neighbor[range-1];
 					number_of_bonds++;
 				}
 			}
