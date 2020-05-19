@@ -9,13 +9,15 @@
 enum LatticeType
 {
 	SQUARE=0,
-	TRIANG=1
+	TRIANG_XC=1,
+	TRIANG_YC=2
 };
 
 std::ostream& operator<< (std::ostream& s, LatticeType lattice)
 {
 	if      (lattice==SQUARE)     {s << "square";}
-	else if (lattice==TRIANG)     {s << "triangular";}
+	else if (lattice==TRIANG_XC)     {s << "triangularXC";}
+	else if (lattice==TRIANG_YC)     {s << "triangularYC";}
 	return s;
 }
 
@@ -80,22 +82,30 @@ Lattice2D(array<size_t,2> L_input, array<bool,2> PERIODIC_input, LatticeType typ
 	if (type == LatticeType::SQUARE)
 		{
 			name_ = "Square lattice";
-			a[0] << 1 , 0;
-			a[1] << 0 , 1;
+			a[0] << 1. , 0.;
+			a[1] << 0. , 1.;
 			neighbor_distance[0] = a[0].norm();
 			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
 			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
 		}
-	else if (type == LatticeType::TRIANG)
+	else if (type == LatticeType::TRIANG_XC)
 		{
-			name_ = "Triangular lattice";
-			a[0] << 1 , 0;
+			name_ = "Triangular lattice (XC)";
+			a[0] << 1. , 0.;
 			a[1] << 0.5 , std::sqrt(3.)*0.5 ;
 			neighbor_distance[0] = a[0].norm();
 			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
 			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
 		}
-	
+	else if (type == LatticeType::TRIANG_YC)
+		{
+			name_ = "Triangular lattice (YC)";
+			a[0] << std::sqrt(3.)*0.5 , 0.5 ;
+			a[1] << 0. , 1.;
+			neighbor_distance[0] = a[0].norm();
+			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
+		}
 	cout << "a[0]: " << a[0].transpose() << "\ta[1]: " << a[1].transpose() << endl;
 	Eigen::Rotation2D<double> rot90(0.5*M_PI);
 	Eigen::Matrix<double,dim,dim> rotate90 = rot90.toRotationMatrix();
