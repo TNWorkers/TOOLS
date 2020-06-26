@@ -58,6 +58,8 @@ public:
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY, std::string atom) const;
 
 	std::size_t numberOfBonds() const {return number_of_bonds;}
+
+	Lattice2D lattice() const {return lattice_;}
 private:
 	
 	TRAVERSE2D path;
@@ -69,7 +71,7 @@ private:
 	
 	void fill_HoppingMatrix (size_t range=1ul);
 
-	Lattice2D lattice;
+	Lattice2D lattice_;
 
 	vector<double> coupling_neighbor;
 
@@ -78,7 +80,7 @@ private:
 
 Geometry2D::
 Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, vector<double> lambda)
-	:path(path_input), coupling_neighbor(lambda), lattice(lattice_input)
+	:path(path_input), coupling_neighbor(lambda), lattice_(lattice_input)
 {
 	number_of_bonds = 0ul;
 	HoppingMatrix.resize(coupling_neighbor.size());
@@ -126,31 +128,31 @@ fill_HoppingMatrix (size_t range)
 {
 	assert(range>0 and range<=coupling_neighbor.size());
 	
-	if (lattice.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
+	if (lattice_.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
 	
-	HoppingMatrix[range-1].resize(lattice.volume()*lattice.unitCell.size(),lattice.volume()*lattice.unitCell.size()); HoppingMatrix[range-1].setZero();
+	HoppingMatrix[range-1].resize(lattice_.volume()*lattice_.unitCell.size(),lattice_.volume()*lattice_.unitCell.size()); HoppingMatrix[range-1].setZero();
 	if (coupling_neighbor[range-1] < 1.e-8) {return;}
 	
 	// Mirrors the y coordinate to create a snake.
 	auto mirror = [this] (int iy) -> int
 	{
-		vector<int> v(lattice.size(1));
+		vector<int> v(lattice_.size(1));
 		std::iota (begin(v),end(v),0);
 		reverse(v.begin(),v.end());
 		return v[iy];
 	};
 
-	for (int ix=0; ix<lattice.size(0); ++ix)
-	for (int iy=0; iy<lattice.size(1); ++iy)
-	for (int jx=0; jx<lattice.size(0); ++jx)
-	for (int jy=0; jy<lattice.size(1); ++jy)
+	for (int ix=0; ix<lattice_.size(0); ++ix)
+	for (int iy=0; iy<lattice_.size(1); ++iy)
+	for (int jx=0; jx<lattice_.size(0); ++jx)
+	for (int jy=0; jy<lattice_.size(1); ++jy)
 	{
 		int countCellAtoms_i=-1;
-		for (const auto &[atom_i,position_i] : lattice.unitCell)
+		for (const auto &[atom_i,position_i] : lattice_.unitCell)
 		{
 			countCellAtoms_i++;
 			int countCellAtoms_j=-1;
-			for (const auto &[atom_j,position_j] : lattice.unitCell)
+			for (const auto &[atom_j,position_j] : lattice_.unitCell)
 			{
 				countCellAtoms_j++;
 				int iy_=iy, jy_=jy;
@@ -161,8 +163,8 @@ fill_HoppingMatrix (size_t range)
 					jy_ = (jx%2==0)? jy : mirror(jy);
 				}
 				// the index is calculated normally:
-				int index_i = iy*lattice.unitCell.size()+lattice.size(1)*lattice.unitCell.size()*ix+countCellAtoms_i;
-				int index_j = jy*lattice.unitCell.size()+lattice.size(1)*lattice.unitCell.size()*jx+countCellAtoms_j;
+				int index_i = iy*lattice_.unitCell.size()+lattice_.size(1)*lattice_.unitCell.size()*ix+countCellAtoms_i;
+				int index_j = jy*lattice_.unitCell.size()+lattice_.size(1)*lattice_.unitCell.size()*jx+countCellAtoms_j;
 		
 				// but is stored together with the mirrored y_:
 				if (jx == 0 and jy == 0)
@@ -172,7 +174,7 @@ fill_HoppingMatrix (size_t range)
 //			cout << "ix=" << ix << ", iy_=" << iy_ << ", index_i=" << index_i << endl;
 				}
 
-				if (lattice.ARE_NEIGHBORS( {ix,iy_},{jx,jy_}, atom_i, atom_j, range))
+				if (lattice_.ARE_NEIGHBORS( {ix,iy_},{jx,jy_}, atom_i, atom_j, range))
 				{					
 					HoppingMatrix[range-1](index_i,index_j) += coupling_neighbor[range-1];
 					number_of_bonds++;
@@ -204,9 +206,9 @@ rangeFormat (const Eigen::ArrayXXd &hop)
 Eigen::ArrayXd Geometry2D::
 x_row (int iy) const
 {
-	Eigen::ArrayXd out(lattice.size(0)*lattice.unitCell.size());
-	for (int ix=0; ix<lattice.size(0); ++ix)
-	for (const auto &[atom,position]: lattice.unitCell)
+	Eigen::ArrayXd out(lattice_.size(0)*lattice_.unitCell.size());
+	for (int ix=0; ix<lattice_.size(0); ++ix)
+	for (const auto &[atom,position]: lattice_.unitCell)
 	{
 		out(ix) = index.at(make_tuple(ix,iy,atom));
 	}
@@ -216,22 +218,22 @@ x_row (int iy) const
 vector<complex<double> > Geometry2D::
 FTy_phases (int x, int iky, bool PARITY, std::string atom="") const
 {
-	vector<complex<double> > out(lattice.volume());
-	for (int l=0; l<lattice.volume(); ++l)
+	vector<complex<double> > out(lattice_.volume());
+	for (int l=0; l<lattice_.volume(); ++l)
 	{
 		out[l] = 0.;
 	}
 	
 	double sign = pow(-1.,PARITY);
-	double ky = iky * 2.*M_PI/lattice.size(1);
+	double ky = iky * 2.*M_PI/lattice_.size(1);
 	
 //	cout << "iky=" << iky << ", ky=" << ky << endl;
 	
-	for (int y=0; y<lattice.size(1); ++y)
+	for (int y=0; y<lattice_.size(1); ++y)
 	{
 		int i = index.at(make_tuple(x,y,atom));
 		
-		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(lattice.size(1));
+		out[i] = exp(sign*1.i*ky*static_cast<double>(y)) / sqrt(lattice_.size(1));
 		
 //		cout << "ky=" << ky << ", x=" << x << ", y=" << y << ", i=" << i << ", index.at(make_pair(x,y))=" << index.at(make_pair(x,y)) << ", val=" << out[i] << endl;
 	}
