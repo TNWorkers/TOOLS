@@ -114,6 +114,11 @@ std::string remove_termcolor (const std::string &mainStr)
 	eraseAllSubStr(out, "[1m");
 	eraseAllSubStr(out, "[00m");
 	eraseAllSubStr(out, "[4m");
+	eraseAllSubStr(out, "[0m");
+	eraseAllSubStr(out, "[22;34m");
+	eraseAllSubStr(out, "[22;31m");
+	eraseAllSubStr(out, "[22;32");
+	eraseAllSubStr(out, "[22;0m");
 	return out;
 }
 
