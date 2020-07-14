@@ -26,7 +26,8 @@ public:
 	Eigen::ArrayXXd hopping(size_t range=1ul) const {assert(range>0 and range<=coupling_neighbor.size()); return HoppingMatrix[range-1];}
 	
 	/**return hopping matrix*/
-	static vector<vector<std::pair<size_t,double> > > rangeFormat (const Eigen::ArrayXXd &hop);
+	template<typename Scalar=double>
+	static vector<vector<std::pair<size_t,Scalar> > > rangeFormat (const Eigen::Array<Scalar,Dynamic,Dynamic> &hop);
 	
 	/**access x,y,atom(index)*/
 	inline tuple<int,int,std::string> operator() (int i)        const {return coord.at(i);}
@@ -53,6 +54,8 @@ public:
 	static double minval (const Eigen::ArrayXXd &hop);
 	
 	static string hoppingInfo (const Eigen::ArrayXXd &hop);
+	
+	static string hoppingInfo (const Eigen::ArrayXXcd &hop);
 	
 	/**Coefficients for the Fourier transform in y-direction.*/
 	vector<complex<double> > FTy_phases (int ix_fixed, int iky, bool PARITY, std::string atom) const;
@@ -186,10 +189,11 @@ fill_HoppingMatrix (size_t range)
 	number_of_bonds = static_cast<size_t>(number_of_bonds/2);
 }
 
-vector<vector<std::pair<size_t,double> > > Geometry2D::
-rangeFormat (const Eigen::ArrayXXd &hop)
+template<typename Scalar>
+vector<vector<std::pair<size_t,Scalar> > > Geometry2D::
+rangeFormat (const Eigen::Array<Scalar,Dynamic,Dynamic> &hop)
 {
-	vector<vector<std::pair<size_t,double> > > out(hop.rows());
+	vector<vector<std::pair<size_t,Scalar> > > out(hop.rows());
 	
 	for (int i=0; i<hop.rows(); ++i)
 	for (int j=i; j<hop.cols(); ++j)
@@ -326,6 +330,17 @@ hoppingInfo (const Eigen::ArrayXXd &hop)
 	   << ",maxd=" << round(maxd(hop),2) 
 	   << ",minv=" << minval(hop)
 	   << ",maxv=" << maxval(hop);
+	return ss.str();
+}
+
+string Geometry2D::
+hoppingInfo (const Eigen::ArrayXXcd &hop)
+{
+	stringstream ss;
+	ss << ",minRe=" << minval(hop.real())
+	   << ",maxRe=" << maxval(hop.real())
+	   << ",minIm=" << minval(hop.imag())
+	   << ",maxIm=" << maxval(hop.imag());
 	return ss.str();
 }
 

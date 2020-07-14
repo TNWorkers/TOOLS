@@ -143,10 +143,21 @@ get_default (const string label) const
 	auto it = defaults.find(label);
 	if (it == defaults.end())
 	{
-		cout << "Cannot get default parameter " << label << "!" << endl;
+		lout << "Cannot get default parameter " << label << "!" << endl;
 		assert(it != defaults.end());
 	}
-	return any_cast<Scalar>(it->second);
+	Scalar res;
+	try
+	{
+		res = any_cast<Scalar>(it->second);
+	}
+	catch (const std::bad_any_cast& e)
+	{
+		lout << e.what() << ", parameter " << label << ", output type=" << typeid(Scalar).name() << endl;
+		throw;
+	}
+	return res;
+//	return any_cast<Scalar>(it->second);
 }
 
 bool ParamHandler::
@@ -265,7 +276,7 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 	}
 	else // default label != 0
 	{
-		if (res.x = get_default<Scalar>(label_x) and res.x != 0.)
+		if (res.x == get_default<Scalar>(label_x) and res.x != 0.)
 		{
 			ss << label_x << "=" << res.x << "(default)";
 			res.label = ss.str();
@@ -325,7 +336,7 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 	}
 	else // default label != 0
 	{
-		if (res.x = get_default<Scalar>(label_x) and res.x != 0.)
+		if (res.x == get_default<Scalar>(label_x) and res.x != 0.)
 		{
 			ss << label_x << "=" << res.x << "(default)";
 			res.label = ss.str();
@@ -348,13 +359,13 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	auto set_a = [&res, &size_a, &PERIODIC] ()
 	{
 		res.a.resize(size_a,size_a);
-        res.a.setZero();
-        if(size_a > 1)
-        {
-            res.a.matrix().template diagonal<1>().setConstant(res.x);
-            res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
-        }
-        if (PERIODIC and size_a > 2)
+		res.a.setZero();
+		if(size_a > 1)
+		{
+			res.a.matrix().template diagonal<1>().setConstant(res.x);
+			res.a.matrix().template diagonal<-1>() = res.a.matrix().template diagonal<1>();
+		}
+		if (PERIODIC and size_a > 2)
 		{
 			res.a(0,size_a) = res.x;
 			res.a(size_a,0) = res.x;
@@ -363,11 +374,11 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	
 	if (HAS(label_x1,loc))
 	{
-		res.x = get_default<double>(label_x1);
+		res.x = get_default<Scalar>(label_x1);
 	}
 	else
 	{
-		res.x = get_default<double>(label_x2);
+		res.x = get_default<Scalar>(label_x2);
 	}
 	set_a();
 	
