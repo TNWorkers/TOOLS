@@ -71,9 +71,14 @@ public:
 	void load_char (const char * setname, std::string &c);
 
 	std::size_t get_vector_size (const char * setname);
-
+	
+	bool CHECK (string dataset)
+	{
+		return H5Lexists(file->getId(), dataset.c_str(), H5P_DEFAULT) > 0;
+	}
+	
 private:
-
+	
 	FILE_ACCESS_MODE MODE;
 	std::string filename;
 	std::unique_ptr<H5::H5File> file;
