@@ -97,7 +97,8 @@ Lattice2D(array<size_t,2> L_input, array<bool,2> PERIODIC_input, LatticeType typ
 			a[0] << 1. , 0.;
 			a[1] << 0. , 1.;
 			neighbor_distance[0] = a[0].norm();
-			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			if (furthest_neighbor == 2 and L[1] > 1) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			else if (furthest_neighbor == 2 and L[1] == 1) {neighbor_distance[1] = (2*a[0]).norm();}
 			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
 		}
 	else if (type_ == LatticeType::TRIANG_XC or type_ == LatticeType::TRIANG)
@@ -107,7 +108,8 @@ Lattice2D(array<size_t,2> L_input, array<bool,2> PERIODIC_input, LatticeType typ
 			a[0] << 1. , 0.;
 			a[1] << 0.5 , std::sqrt(3.)*0.5 ;
 			neighbor_distance[0] = a[0].norm();
-			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			if (furthest_neighbor == 2 and L[1] > 1) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			else if (furthest_neighbor == 2 and L[1] == 1) {neighbor_distance[1] = (2*a[0]).norm();}
 			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
 		}
 	else if (type_ == LatticeType::TRIANG_YC)
@@ -116,7 +118,8 @@ Lattice2D(array<size_t,2> L_input, array<bool,2> PERIODIC_input, LatticeType typ
 			a[0] << std::sqrt(3.)*0.5 , 0.5 ;
 			a[1] << 0. , 1.;
 			neighbor_distance[0] = a[0].norm();
-			if (furthest_neighbor == 2) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			if (furthest_neighbor == 2 and L[1] > 1) {neighbor_distance[1] = (a[0]+a[1]).norm();}
+			else if (furthest_neighbor == 2 and L[1] == 1) {neighbor_distance[1] = (2*a[0]).norm();}
 			unitCell[""]=Eigen::Matrix<double,dim,1>::Zero();
 		}
 	Eigen::Rotation2D<double> rot90(0.5*M_PI);
