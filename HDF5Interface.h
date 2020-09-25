@@ -54,6 +54,8 @@ public:
 	void create_group(std::string grp_name);
 	bool HAS_GROUP(std::string grp_name);
 
+        std::vector<std::string> get_groups() const;
+  
 	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");
 
@@ -72,9 +74,9 @@ public:
 
 	std::size_t get_vector_size (const char * setname);
 	
-	bool CHECK (string dataset)
+  bool CHECK (std::string dataset)
 	{
-		return H5Lexists(file->getId(), dataset.c_str(), H5P_DEFAULT) > 0;
+          return H5Lexists(file->getId(), dataset.c_str(), H5P_DEFAULT) > 0;
 	}
 	
 private:
@@ -131,6 +133,20 @@ HAS_GROUP (std::string grp_name)
 //	catch(...) {out = false;}
 //	return out;
 	return H5Lexists(file->getId(), grp_name.c_str(), H5P_DEFAULT) > 0;
+}
+
+std::vector<std::string> HDF5Interface::
+get_groups () const
+{
+        hsize_t nobjs = file->getNumObjs();
+        std::vector<std::string> out(nobjs);
+
+        H5std_string obj_name;
+        for (std::size_t i = 0; i < nobjs; i++)
+                {
+                        out[i] = file->getObjnameByIdx(i);
+                }
+        return out;
 }
 
 template<typename ScalarType>

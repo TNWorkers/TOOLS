@@ -130,7 +130,6 @@ Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, vector<double>
 void Geometry2D::
 fill_HoppingMatrix (size_t range)
 {
-	cout << "computing for range=" << range << endl;
 	assert(range>0 and range<=coupling_neighbor.size());
 	
 	if (lattice_.size(0)==1) {assert(path != SNAKE and "Must use Lx>=2 with the SNAKE geometry!");}
