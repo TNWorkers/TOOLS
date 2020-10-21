@@ -14,7 +14,7 @@
 #endif
 
 // conversion into native types of HDF5
-template<typename T> [[noreturn]] inline H5::PredType native_type() {}
+template<typename T> inline H5::PredType native_type() {return H5::PredType::NATIVE_DOUBLE;}
 
 template<> inline H5::PredType native_type<int>() {return H5::PredType::NATIVE_INT;}
 template<> inline H5::PredType native_type<double>(){return H5::PredType::NATIVE_DOUBLE;}
@@ -157,7 +157,7 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 	//Need to switch the layout here, because HDF5 uses RowMajor.
 	Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> switch_to_row = mat;
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
-	std::array<Index,dimensions_size> tmp;
+//	std::array<Index,dimensions_size> tmp; // not used??
 	
 	hsize_t dimensions[dimensions_size]; dimensions[0] = mat.rows(); dimensions[1] = mat.cols();
 	H5::DataSpace space(dimensions_size, dimensions);
@@ -197,7 +197,7 @@ load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std
 	}
 	H5::DataSpace dataspace = dataset.getSpace();
 
-	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);	
+	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
 	hsize_t dimensions[dimensions_size];
 	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
 	H5::DataSpace memspace(2,dimensions);
@@ -224,7 +224,7 @@ save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::str
 	Eigen::Tensor<ScalarType,Nl,Eigen::RowMajor,Index> switch_to_row = ten.swap_layout().shuffle(shuffle_dims); 
 
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);
-	std::array<Index,dimensions_size> tmp;
+//	std::array<Index,dimensions_size> tmp; // not used??
 	
 	hsize_t dimensions[dimensions_size];
 	for (std::size_t i=0; i<Nl; i++)

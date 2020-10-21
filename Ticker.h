@@ -1,5 +1,8 @@
 #ifndef TICKER_H_
 #define TICKER_H_
+
+#include <cassert>
+
 namespace TerminalPlot
 {
 	enum ROUND
@@ -19,7 +22,7 @@ namespace TerminalPlot
 			{
 				min_rnd = round(2, min_, ROUND::TO_LOWER);
 				max_rnd = round(2, max_, ROUND::TO_UPPER);
-				std::cout << label << "-ticker: min~" << min_rnd << ", max~" << max_rnd << ", relevant Digits: " << relevantDigits() << endl;
+				std::cout << label << "-ticker: min~" << min_rnd << ", max~" << max_rnd << ", relevant Digits: " << relevantDigits() << std::endl;
 			};
 		std::vector<Scalar> ticks(std::size_t amountOfTicks = 7) const;
 		Scalar min() const {return min_rnd;}
@@ -77,7 +80,7 @@ namespace TerminalPlot
 				return power+1;
 			}
 		}
-		assert(false and "Could not round sensfully...");
+		assert(false and "Could not round sensibly...");
 	}
 	
 	template<typename Scalar>

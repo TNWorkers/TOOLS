@@ -12,7 +12,7 @@
 
 #define MAXBUFSIZE ((int) 1e6)
 
-Eigen::Matrix<double,Dynamic,Dynamic> readMatrix (const std::string filename)
+Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> readMatrix (const std::string filename)
 {
 	int cols = 0;
 	int rows = 0;
@@ -23,7 +23,7 @@ Eigen::Matrix<double,Dynamic,Dynamic> readMatrix (const std::string filename)
 	// Read numbers from file into buffer.
 	ifstream infile;
 	infile.open(filename);
-	assert(infile.is_open() and "Does the file exist?");
+	assert(infile.is_open() and "Could not open " and filename.c_str());
 	while (!infile.eof())
 	{
 		std::string line;
@@ -43,7 +43,7 @@ Eigen::Matrix<double,Dynamic,Dynamic> readMatrix (const std::string filename)
 	infile.close();
 	
 	// Populate matrix with numbers.
-	Eigen::Matrix<double,Dynamic,Dynamic> result(rows,cols);
+	Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> result(rows,cols);
 	for (int i=0; i<rows; i++)
 	for (int j=0; j<cols; j++)
 	{
@@ -53,12 +53,12 @@ Eigen::Matrix<double,Dynamic,Dynamic> readMatrix (const std::string filename)
 	return result;
 };
 
-Eigen::Matrix<double,Dynamic,Dynamic> loadMatrix (const std::string filename)
+Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> loadMatrix (const std::string filename)
 {
 	return readMatrix(filename);
 }
 
-void saveMatrix (const Eigen::Matrix<double,Dynamic,Dynamic> &M, const std::string filename, bool PRINT = true)
+void saveMatrix (const Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> &M, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<M.rows(); ++i)
@@ -80,7 +80,7 @@ void saveMatrix (const Eigen::Matrix<double,Dynamic,Dynamic> &M, const std::stri
 	if (PRINT) {lout << "saved to: " << filename << endl;}
 };
 
-void saveMatrix_cpython (const Eigen::Matrix<complex<double>,Dynamic,Dynamic> &M, const std::string filename, bool PRINT = true)
+void saveMatrix_cpython (const Eigen::Matrix<complex<double>,Eigen::Dynamic,Eigen::Dynamic> &M, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<M.rows(); ++i)
@@ -107,7 +107,7 @@ void saveMatrix_cpython (const Eigen::Matrix<complex<double>,Dynamic,Dynamic> &M
 	if (PRINT) {lout << "saved to: " << filename << endl;}
 };
 
-void save_xy (const Eigen::Array<double,Dynamic,1> &x, const Eigen::Array<double,Dynamic,1> &y, const std::string filename, bool PRINT = true)
+void save_xy (const Eigen::Array<double,Eigen::Dynamic,1> &x, const Eigen::Array<double,Eigen::Dynamic,1> &y, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<x.rows(); ++i)
@@ -118,8 +118,8 @@ void save_xy (const Eigen::Array<double,Dynamic,1> &x, const Eigen::Array<double
 	if (PRINT) {lout << "saved to: " << filename << endl;}
 }
 
-void save_xy (const Eigen::Array<double,Dynamic,1> &x, const Eigen::Array<double,Dynamic,1> &y1, 
-              const Eigen::Array<double,Dynamic,1> &y2, const std::string filename, bool PRINT = true)
+void save_xy (const Eigen::Array<double,Eigen::Dynamic,1> &x, const Eigen::Array<double,Eigen::Dynamic,1> &y1, 
+              const Eigen::Array<double,Eigen::Dynamic,1> &y2, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<x.rows(); ++i)
