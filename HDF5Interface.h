@@ -47,6 +47,11 @@ public:
 	HDF5Interface () {};
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
 	/* ~HDF5Interface(); */
+
+	static bool IS_VALID_HDF5(std::string filename)
+	{
+	  return H5::H5File::isHdf5(filename.c_str());
+	};
 	
 	void switch_to(FILE_ACCESS_MODE mode_input);
 	void close();
