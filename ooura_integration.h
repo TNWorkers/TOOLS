@@ -73,16 +73,23 @@ namespace Ooura
 	/**Fourier transform*/
 	VectorXcd FT (const VectorXd &tvals, const VectorXcd &fvals, double h, double wmin, double wmax, int wpoints)
 	{
+//		cout << "tvals=" << tvals.transpose() << endl;
+//		cout << "fvals=" << fvals.transpose() << endl;
+//		cout << "h=" << h << endl;
+//		cout << "wmin=" << wmin << ", wmax=" << wmax << ", wpoints=" << wpoints << endl;
+		
 		double tmax = tvals(tvals.rows()-1);
 		double w0 = 0.5*wmax;
 		double b = 0.25;
 		double a = choose_a(w0,h,b);
 		std::pair<int,int> Npm = find_Npm(tmax,w0,h,a,b);
-		while (Npm.second==1)
+		int failsafe = 0;
+		while (Npm.second==1 and failsafe<1000)
 		{
-//			lout << "must correct w0 from=" << w0 << " to " << w0+0.5*wmax << endl;
 			w0 += 0.5*wmax;
 			Npm = find_Npm(tmax,w0,h,a,b);
+			++failsafe;
+			if (failsafe==1000) lout << termcolor::red << "Warning: bad OOURA integration!" << termcolor::reset << endl;
 		}
 		int Nm = Npm.first;
 		int Np = Npm.second;

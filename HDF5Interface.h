@@ -42,12 +42,13 @@ class HDF5Interface
 	template<typename ScalarType, Index Nl> using TensorType = Eigen::Tensor<ScalarType,Nl,Eigen::ColMajor,Index>;
 #endif
 	template<typename ScalarType> using MatrixType = Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>;
+	template<typename ScalarType> using VectorType = Eigen::Matrix<ScalarType,Eigen::Dynamic,1>;
 	
 public:
 	HDF5Interface () {};
 	HDF5Interface (std::string filename_input, FILE_ACCESS_MODE mode_input);
 	/* ~HDF5Interface(); */
-
+	
 	static bool IS_VALID_HDF5(std::string filename)
 	{
 	  return H5::H5File::isHdf5(filename.c_str());
@@ -55,33 +56,37 @@ public:
 	
 	void switch_to(FILE_ACCESS_MODE mode_input);
 	void close();
-
+	
 	void create_group(std::string grp_name);
 	bool HAS_GROUP(std::string grp_name);
-
-        std::vector<std::string> get_groups() const;
-  
+	
+	std::vector<std::string> get_groups() const;
+	
 	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");
-
+	
 	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
 	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
-
+	
 	template<typename ScalarType> void save_matrix (const MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_matrix (MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
-
-#ifdef HDF5_WITH_TENSOR
+	
+	template<typename ScalarType> void save_vector (const VectorType<ScalarType> &vec, std::string setname, std::string grp_name="");
+	template<typename ScalarType> void load_vector (VectorType<ScalarType> &vec, std::string setname, std::string grp_name="");
+	
+	#ifdef HDF5_WITH_TENSOR
 	template<typename ScalarType, Index Nl> void save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::string grp_name="");
 	template<typename ScalarType, Index Nl> void load_tensor (TensorType<ScalarType,Nl> &ten, std::string setname);
-#endif
+	#endif
+	
 	void save_char (std::string salvandum, const char * setname);
 	void load_char (const char * setname, std::string &c);
-
+	
 	std::size_t get_vector_size (const char * setname);
 	
-  bool CHECK (std::string dataset)
+	bool CHECK (std::string dataset)
 	{
-          return H5Lexists(file->getId(), dataset.c_str(), H5P_DEFAULT) > 0;
+		return H5Lexists(file->getId(), dataset.c_str(), H5P_DEFAULT) > 0;
 	}
 	
 private:
@@ -161,7 +166,7 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 	assert(MODE==WRITE or MODE==REWRITE);
 	//Need to switch the layout here, because HDF5 uses RowMajor.
 	Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> switch_to_row = mat;
-	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
+	constexpr std::size_t dimensions_size = 2ul;
 //	std::array<Index,dimensions_size> tmp; // not used??
 	
 	hsize_t dimensions[dimensions_size]; dimensions[0] = mat.rows(); dimensions[1] = mat.cols();
@@ -185,7 +190,7 @@ save_matrix (const Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> &mat,
 
 template<typename ScalarType>
 void HDF5Interface::
-load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std::string setname, std::string grp_name)
+load_matrix (Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std::string setname, std::string grp_name)
 {
 	assert(MODE==READ);
 	H5::DataSet dataset;
@@ -201,18 +206,75 @@ load_matrix ( Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std
 		dataset = file->openDataSet(setname);
 	}
 	H5::DataSpace dataspace = dataset.getSpace();
-
+	
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
 	hsize_t dimensions[dimensions_size];
 	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
 	H5::DataSpace memspace(2,dimensions);
-
+	
 	//Need to use a Rowmajor matrix here and convert afterwards, because HDF5 us RowMajor storage order.
 	Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> temp(dimensions[0],dimensions[1]);
-
+	
 	dataset.read(temp.data(), native_type<ScalarType>(), memspace, dataspace);
-
+	
 	mat = temp;
+}
+
+template<typename ScalarType>
+void HDF5Interface::
+save_vector (const Eigen::Matrix<ScalarType,Eigen::Dynamic,1> &vec, std::string setname, std::string grp_name)
+{
+	assert(MODE==WRITE or MODE==REWRITE);
+	constexpr std::size_t dimensions_size = 1ul;
+	
+	hsize_t dimensions[dimensions_size]; dimensions[0] = vec.rows();
+	H5::DataSpace space(dimensions_size, dimensions);
+	H5::IntType datatype(native_type<ScalarType>());
+	
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->createDataSet(setname.c_str(), datatype, space);
+		delete g;
+	}
+	else
+	{
+		dataset = file->createDataSet(setname.c_str(), datatype, space);
+	}
+	dataset.write(vec.data(), native_type<ScalarType>());
+}
+
+template<typename ScalarType>
+void HDF5Interface::
+load_vector (Eigen::Matrix<ScalarType,Eigen::Dynamic,1>  &vec, std::string setname, std::string grp_name)
+{
+	assert(MODE==READ);
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->openDataSet(setname);
+		delete g;
+	}
+	else
+	{
+		dataset = file->openDataSet(setname);
+	}
+	H5::DataSpace dataspace = dataset.getSpace();
+	
+	constexpr std::size_t dimensions_size = 1ul;
+	hsize_t dimensions[dimensions_size];
+	int ndims = dataspace.getSimpleExtentDims(dimensions, NULL);
+	H5::DataSpace memspace(1,dimensions);
+	
+	Eigen::Matrix<ScalarType,Eigen::Dynamic,1> temp(dimensions[0]);
+	
+	dataset.read(temp.data(), native_type<ScalarType>(), memspace, dataspace);
+	
+	vec = temp;
 }
 
 #ifdef HDF5_WITH_TENSOR
