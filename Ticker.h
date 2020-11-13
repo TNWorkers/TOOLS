@@ -103,7 +103,7 @@ namespace TerminalPlot
 					return std::floor(transformed) * std::pow(10,-power);
 			}
 		}
-		assert(false and "Could not round sensfully...");
+		assert(false and "Could not round sensibly...");
 	}
 
 	template<typename Scalar>

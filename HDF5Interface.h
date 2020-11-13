@@ -38,9 +38,9 @@ enum FILE_ACCESS_MODE {READ, WRITE, REWRITE};
 class HDF5Interface
 {
 	typedef Eigen::Index Index;
-#ifdef HDF5_WITH_TENSOR
+	#ifdef HDF5_WITH_TENSOR
 	template<typename ScalarType, Index Nl> using TensorType = Eigen::Tensor<ScalarType,Nl,Eigen::ColMajor,Index>;
-#endif
+	#endif
 	template<typename ScalarType> using MatrixType = Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>;
 	template<typename ScalarType> using VectorType = Eigen::Matrix<ScalarType,Eigen::Dynamic,1>;
 	
