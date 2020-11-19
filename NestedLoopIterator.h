@@ -18,7 +18,7 @@ public:
 	NestedLoopIterator (std::size_t dim_input, std::vector<std::size_t> ranges_input);
 	NestedLoopIterator (std::size_t dim_input, std::size_t const_range);
 	
-	void operator++() {++curr_index; make_tensorIndex();};
+	void operator++() {++curr_index; make_reverseTensorIndex();};
 	
 	std::size_t operator*() {return index();}
 	
@@ -34,6 +34,7 @@ public:
 	inline std::size_t index() {return curr_index;}
 	inline std::size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline std::size_t operator() (std::size_t index) const {return tensor_index[index];}
+        inline std::vector<std::size_t> operator() () const {return tensor_index;}
 	
 private:
 

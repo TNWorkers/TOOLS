@@ -51,6 +51,15 @@ struct Permutation
                 std::iota(id.begin(), id.end(), 0ul);
                 return Permutation<N>(id);
         }
+
+        static std::vector<Permutation<N> > all() {
+                std::array<std::size_t, N> pi; std::iota(pi.begin(), pi.end(), 0ul);
+                std::vector<Permutation<N> > out;
+                do {
+                        out.push_back(pi);
+                } while (std::next_permutation(pi.begin(), pi.end()));
+                return out;
+        }
         
         std::string print() const {
                 std::stringstream ss;
