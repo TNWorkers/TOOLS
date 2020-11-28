@@ -9,6 +9,10 @@
 #include <numeric>
 #include <cassert>
 
+#ifdef TOOLS_HAS_BOOST_HASH_COMBINE
+#include <boost/functional/hash.hpp>
+#endif
+
 template<std::size_t N> struct Permutation;
 
 using Transposition = Permutation<2>;
@@ -46,6 +50,20 @@ struct Permutation
                 }       
         }
 
+#ifdef TOOLS_HAS_BOOST_HASH_COMBINE
+        friend std::size_t hash_value(const Permutation<N>& p)
+        {
+                std::size_t seed = 0;
+                boost::hash_combine(seed, p.pi);
+                return seed;
+        }
+#endif
+        
+        bool operator== (const Permutation<N>& other) const
+        {                
+                return pi == other.pi;
+        }
+        
         static Permutation<N> Identity() {
                 std::array<std::size_t, N> id;
                 std::iota(id.begin(), id.end(), 0ul);
