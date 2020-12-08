@@ -150,6 +150,13 @@ struct Permutation
                 Permutation<N> out(pi_inv);
                 return out;
         }
+
+        template<typename IndexType>
+        std::array<IndexType, N> pi_as_index() const {
+                std::array<IndexType, N> out;
+                std::copy(pi.begin(), pi.end(), out.begin());
+                return out;
+        }
         
         std::array<std::size_t, N> pi;
         std::array<std::size_t, N> pi_inv;
