@@ -38,11 +38,11 @@ struct Param
 {
 	Param (string label_input, std::any value_input, size_t index_input=0)
 	:label(label_input), value(value_input), index(index_input)
-	{}
+	{};
 	
 	Param (tuple<string,std::any> input, size_t index_input=0)
 	:label(get<0>(input)), value(get<1>(input)), index(index_input)
-	{}
+	{};
 	
 	string   label;
 	std::any value;

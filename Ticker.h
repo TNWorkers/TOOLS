@@ -80,7 +80,8 @@ namespace TerminalPlot
 				return power+1;
 			}
 		}
-		assert(false and "Could not round sensibly...");
+		return 0;
+//		assert(false and "Could not round sensibly...");
 	}
 	
 	template<typename Scalar>
