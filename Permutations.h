@@ -9,6 +9,8 @@
 #include <numeric>
 #include <cassert>
 
+#include "macros.h"
+
 #ifdef TOOLS_HAS_BOOST_HASH_COMBINE
 #include <boost/functional/hash.hpp>
 #endif
