@@ -55,7 +55,7 @@ namespace TerminalPlot
 		typename Container::value_type ymin_rnd = yticker.min();
 		typename Container::value_type ymax_rnd = yticker.max();
 		plot::RealCanvas<plot::BrailleCanvas, typename Container::value_type> canvas({ {xmin_rnd,ymin_rnd}, {xmax_rnd,ymax_rnd} }, canvasCellSize, term);
-
+		
 		//compute ticks and labels
 		std::vector<std::size_t> xticks_int(9);
 		std::size_t xstep = std::floor(params.cellCols/8);
@@ -86,7 +86,7 @@ namespace TerminalPlot
 			points.push_back(plot::GenericPoint<typename Container::value_type>(x[i],y[i]));
 		}
 		
-		canvas.path(params.color, points.begin(), points.end());		
+		canvas.path(params.color, points.begin(), points.end());
 		std::cout << plot::margin(1, 2, 0, 2, plot::frame(xticks_int, yticks_int, xtickLabels, ytickLabels, params.label, plot::Align::Center, {plot::BorderStyle::Double, true}, &canvas, term)) << std::flush;
 		#endif
 	}
