@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <complex>
 #include <algorithm>
 #include <numeric>
@@ -11,20 +12,58 @@
 
 #include "macros.h"
 
+#include <boost/algorithm/string.hpp>
+
 #ifdef TOOLS_HAS_BOOST_HASH_COMBINE
 #include <boost/functional/hash.hpp>
 #endif
 
 template<std::size_t N> struct Permutation;
 
-using Transposition = Permutation<2>;
+struct Transposition
+{
+    Transposition() {};
+    Transposition(const std::size_t source_in, const std::size_t target_in): source(source_in), target(target_in) {};
+    Transposition(const std::array<std::size_t,2> data): source(data[0]), target(data[1]) {};
+    std::string print() const {
+        std::stringstream ss;
+        ss << source << " <===> " << target;
+        return ss.str();
+    }
+    std::size_t source = 0;
+    std::size_t target = 0;
+};
 
 template<std::size_t N>
 struct Permutation
 {
         typedef std::vector<std::size_t> Cycle;
 
-        Permutation(const std::array<std::size_t, N>& in): pi(in) {
+        Permutation() {};
+
+        Permutation(const std::array<std::size_t, N>& in): pi(in) { initialize(); }
+
+        Permutation(const std::string filename) {
+                std::ifstream stream(filename, std::ios::in);
+                std::string line;
+                if(stream.is_open()) {
+                        while(std::getline(stream, line)) {
+                                std::vector<std::string> results;
+                    
+                                boost::split(results, line, [](char c) { return c == '\t'; });
+                                if(results[0].find("#") != std::string::npos) { continue; } // skip lines with a hashtag
+                                int source = stoi(results[0]);
+                                int target = stoi(results[1]);
+                                assert(source >=0 and source < N and "Invalid permutation data in file.");
+                                assert(target >=0 and target < N and "Invalid permutation data in file.");
+                                pi[source] = target;
+                        }
+                        stream.close();
+                }
+                initialize();
+        };
+    
+        void initialize() {
                 for (std::size_t i=0; i<N; i++) {
                         pi_inv[pi[i]] = i;
                 }
@@ -50,8 +89,9 @@ struct Permutation
                         }                                
                         cycles.push_back(cycle);
                 }       
+        
         }
-
+    
 #ifdef TOOLS_HAS_BOOST_HASH_COMBINE
         friend std::size_t hash_value(const Permutation<N>& p)
         {
@@ -99,7 +139,18 @@ struct Permutation
                 }
                 return ss.str();
         };
-        
+
+        std::vector<Transposition> transpositions() const {
+            std::vector<Transposition> out;
+            for (const auto& c : cycles) {
+                for (std::size_t i=0; i<c.size()-1; i++) {
+                    Transposition t(c[0],c[c.size()-1-i]);
+                    out.push_back(t);
+                }
+            }
+            return out;
+        };
+    
         std::vector<std::size_t> decompose() const {
             std::array<bool,N> visited; visited.fill(false);
             std::array<std::size_t,N> a;
