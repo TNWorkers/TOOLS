@@ -18,7 +18,7 @@
 #include <boost/functional/hash.hpp>
 #endif
 
-template<std::size_t N> struct Permutation;
+struct Permutation;
 
 struct Transposition
 {
@@ -34,41 +34,54 @@ struct Transposition
     std::size_t target = 0;
 };
 
-template<std::size_t N>
 struct Permutation
 {
         typedef std::vector<std::size_t> Cycle;
 
         Permutation() {};
 
-        Permutation(const std::array<std::size_t, N>& in): pi(in) { initialize(); }
+        Permutation(const std::vector<std::size_t>& in): pi(in) { initialize(); }
 
-        Permutation(const std::string filename) {
+        Permutation(const std::string filename) {                
                 std::ifstream stream(filename, std::ios::in);
                 std::string line;
                 if(stream.is_open()) {
                         while(std::getline(stream, line)) {
                                 std::vector<std::string> results;
-                    
+                                
                                 boost::split(results, line, [](char c) { return c == '\t'; });
                                 if(results[0].find("#") != std::string::npos) { continue; } // skip lines with a hashtag
                                 int source = stoi(results[0]);
                                 int target = stoi(results[1]);
-                                assert(source >=0 and source < N and "Invalid permutation data in file.");
-                                assert(target >=0 and target < N and "Invalid permutation data in file.");
+                                assert(source >=0 and "Invalid permutation data in file.");
+                                assert(target >=0 and "Invalid permutation data in file.");
+                                if (source >= pi.size()) {pi.resize(source+1);}
                                 pi[source] = target;
                         }
                         stream.close();
+                }
+                N = pi.size();
+                
+                //consistency check
+                std::set<std::size_t> bijectivePermutation;
+                for (std::size_t i=0; i<N; i++)
+                {
+                    assert(pi[i] < N and "Invalid permutation data in file.");
+                    auto it = bijectivePermutation.find(pi[i]);
+                    if (it == bijectivePermutation.end()) {bijectivePermutation.insert(pi[i]);}
+                    else {assert(false and "Invalid permutation data in file.");}
                 }
                 initialize();
         };
     
         void initialize() {
+                N=pi.size();
+                pi_inv.resize(N);
                 for (std::size_t i=0; i<N; i++) {
                         pi_inv[pi[i]] = i;
                 }
                 
-                std::array<bool,N> visited; visited.fill(false);
+                std::vector<bool> visited(N,false);
                 while (!std::all_of(visited.cbegin(), visited.cend(), [] (bool b) {return b;})) {
                         auto start_it = std::find(visited.cbegin(), visited.cend(), false);
                         std::size_t start = std::distance(visited.cbegin(),start_it);
@@ -93,7 +106,7 @@ struct Permutation
         }
     
 #ifdef TOOLS_HAS_BOOST_HASH_COMBINE
-        friend std::size_t hash_value(const Permutation<N>& p)
+        friend std::size_t hash_value(const Permutation& p)
         {
                 std::size_t seed = 0;
                 boost::hash_combine(seed, p.pi);
@@ -101,20 +114,20 @@ struct Permutation
         }
 #endif
         
-        bool operator== (const Permutation<N>& other) const
+        bool operator== (const Permutation& other) const
         {                
                 return pi == other.pi;
         }
         
-        static Permutation<N> Identity() {
-                std::array<std::size_t, N> id;
+        static Permutation Identity(std::size_t N) {
+                std::vector<std::size_t> id(N);
                 std::iota(id.begin(), id.end(), 0ul);
-                return Permutation<N>(id);
+                return Permutation(id);
         }
 
-        static std::vector<Permutation<N> > all() {
-                std::array<std::size_t, N> pi; std::iota(pi.begin(), pi.end(), 0ul);
-                std::vector<Permutation<N> > out;
+        static std::vector<Permutation> all(std::size_t N) {
+                std::vector<std::size_t> pi(N); std::iota(pi.begin(), pi.end(), 0ul);
+                std::vector<Permutation> out;
                 do {
                         out.push_back(pi);
                 } while (std::next_permutation(pi.begin(), pi.end()));
@@ -141,19 +154,32 @@ struct Permutation
         };
 
         std::vector<Transposition> transpositions() const {
-            std::vector<Transposition> out;
-            for (const auto& c : cycles) {
-                for (std::size_t i=0; i<c.size()-1; i++) {
-                    Transposition t(c[0],c[c.size()-1-i]);
-                    out.push_back(t);
+                std::vector<Transposition> out;
+                for (const auto& c : cycles) {
+                    for (std::size_t i=0; i<c.size()-1; i++) {
+                        Transposition t(c[0],c[c.size()-1-i]);
+                        out.push_back(t);
+                    }
                 }
-            }
-            return out;
+                return out;
+        };
+
+        std::vector<std::vector<Transposition> > independentTranspositions() const {
+                std::vector<std::vector<Transposition> > out(cycles.size());
+                std::size_t count=0;
+                for (const auto& c : cycles) {
+                    for (std::size_t i=0; i<c.size()-1; i++) {
+                        Transposition t(c[0],c[c.size()-1-i]);
+                        out[count].push_back(t);
+                    }
+                    count++;
+                }
+                return out;
         };
     
         std::vector<std::size_t> decompose() const {
-            std::array<bool,N> visited; visited.fill(false);
-            std::array<std::size_t,N> a;
+            std::vector<bool> visited(N,false);
+            std::vector<std::size_t> a(N);
             std::iota(a.begin(), a.end(), 0ul);
             
             std::vector<std::size_t> out;
@@ -199,20 +225,21 @@ struct Permutation
                 c=tmp;
         }
 
-        Permutation<N> inverse() const {
-                Permutation<N> out(pi_inv);
+        Permutation inverse() const {
+                Permutation out(pi_inv);
                 return out;
         }
 
         template<typename IndexType>
-        std::array<IndexType, N> pi_as_index() const {
-                std::array<IndexType, N> out;
+        std::vector<IndexType> pi_as_index() const {
+                std::vector<IndexType> out(N);
                 std::copy(pi.begin(), pi.end(), out.begin());
                 return out;
         }
-        
-        std::array<std::size_t, N> pi;
-        std::array<std::size_t, N> pi_inv;
+
+        std::size_t N;
+        std::vector<std::size_t> pi;
+        std::vector<std::size_t> pi_inv;
         std::vector<Cycle> cycles;
 };
 
