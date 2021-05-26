@@ -43,7 +43,7 @@ struct Permutation
         template<typename Container>
         Permutation(const Container& in) {
                 pi.resize(in.size()); initialize();
-                std::copy(in.begin(), ind.end(), pi.begin());
+                std::copy(in.begin(), in.end(), pi.begin());
         }
 
         Permutation(const std::string filename) {                
