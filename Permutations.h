@@ -40,7 +40,11 @@ struct Permutation
 
         Permutation() {};
 
-        Permutation(const std::vector<std::size_t>& in): pi(in) { initialize(); }
+        template<typename Container>
+        Permutation(const Container& in) {
+                pi.resize(in.size()); initialize();
+                std::copy(in.begin(), ind.end(), pi.begin());
+        }
 
         Permutation(const std::string filename) {                
                 std::ifstream stream(filename, std::ios::in);
