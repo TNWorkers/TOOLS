@@ -42,8 +42,9 @@ struct Permutation
 
         template<typename Container>
         Permutation(const Container& in) {
-                pi.resize(in.size()); initialize();
+                pi.resize(in.size()); 
                 std::copy(in.begin(), in.end(), pi.begin());
+                initialize();
         }
 
         Permutation(const std::string filename) {                
@@ -130,11 +131,12 @@ struct Permutation
         }
 
         static std::vector<Permutation> all(std::size_t N) {
-                std::vector<std::size_t> pi(N); std::iota(pi.begin(), pi.end(), 0ul);
+                std::vector<std::size_t> data(N); std::iota(data.begin(), data.end(), 0ul);
                 std::vector<Permutation> out;
                 do {
-                        out.push_back(pi);
-                } while (std::next_permutation(pi.begin(), pi.end()));
+                        Permutation p(data);
+                        out.push_back(p);
+                } while (std::next_permutation(data.begin(), data.end()));
                 return out;
         }
         
@@ -214,7 +216,7 @@ struct Permutation
 
         std::size_t parity()
         {
-                std::size_t out;
+                std::size_t out=0;
                 for (const auto& c:cycles) {out += (c.size()-1)%2;}
                 return out%2;
         }
