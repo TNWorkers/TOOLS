@@ -56,9 +56,9 @@ public:
 	Eigen::Matrix<double,dim,1> getSite(const IndexSite& i) const;
 
 	Eigen::Matrix<double,dim,1> getSite(int ix, int iy) const
-		{
-			return getSite(IndexSite(ix,iy));
-		}
+	{
+		return getSite(IndexSite(ix,iy));
+	}
 	
 	//unit vectors of the lattice
 	array<Eigen::Matrix<double,dim,1>,dim> a;
@@ -67,6 +67,7 @@ public:
 	array<Eigen::Matrix<double,dim,1>,dim> b;
 
 	LatticeType type() const {return type_;}
+	
 protected:
 	
 	array<size_t,dim> L;
@@ -86,7 +87,7 @@ protected:
 // template<size_t dim>
 Lattice2D::
 Lattice2D(array<size_t,2> L_input, array<bool,2> PERIODIC_input, LatticeType type_input, size_t furthest_neighbor)
-	:L(L_input), PERIODIC(PERIODIC_input), type_(type_input)
+:L(L_input), PERIODIC(PERIODIC_input), type_(type_input)
 {
 	assert(furthest_neighbor >=1);
 	origin.setZero();

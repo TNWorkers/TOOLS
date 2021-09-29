@@ -83,7 +83,7 @@ private:
 
 Geometry2D::
 Geometry2D(const Lattice2D &lattice_input, TRAVERSE2D path_input, vector<double> lambda)
-	:path(path_input), coupling_neighbor(lambda), lattice_(lattice_input)
+:path(path_input), coupling_neighbor(lambda), lattice_(lattice_input)
 {
 	number_of_bonds = 0ul;
 	HoppingMatrix.resize(coupling_neighbor.size());

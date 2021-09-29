@@ -2,17 +2,22 @@
 #define PARAMHANDLER
 
 #include <any>
+#include <set>
 #include <tuple>
 #include <map>
 #include <initializer_list>
 #include <typeinfo>
 #include <typeindex>
+#include <vector>
+#include <string>
+
+#include <Eigen/Dense>
 
 template<typename Scalar>
 struct param0d
 {
 	Scalar x;
-	string label;
+	std::string label;
 	inline Scalar operator() () const {return x;}
 };
 
@@ -21,7 +26,7 @@ struct param1d
 {
 	Scalar x;
 	Eigen::Array<Scalar,Eigen::Dynamic,1> a;
-	string label;
+	std::string label;
 	inline Scalar operator() (std::size_t i) const {return a(i);}
 };
 
@@ -30,21 +35,21 @@ struct param2d
 {
 	Scalar x;
 	Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> a;
-	string label;
+	std::string label;
 	inline Scalar operator() (std::size_t i, std::size_t j) const {return a(i,j);}
 };
 
 struct Param
 {
-	Param (string label_input, std::any value_input, size_t index_input=0)
+	Param (std::string label_input, std::any value_input, size_t index_input=0)
 	:label(label_input), value(value_input), index(index_input)
 	{};
 	
-	Param (tuple<string,std::any> input, size_t index_input=0)
+	Param (std::tuple<std::string,std::any> input, size_t index_input=0)
 	:label(get<0>(input)), value(get<1>(input)), index(index_input)
 	{};
 	
-	string   label;
+	std::string   label;
 	std::any value;
 	size_t   index=0;
 };
@@ -53,40 +58,40 @@ class ParamHandler
 {
 public:
 	
-	ParamHandler (const vector<Param> &p_list);
-	ParamHandler (const vector<Param> &p_list, const map<string,std::any> &defaults_input);
+	ParamHandler (const std::vector<Param> &p_list);
+	ParamHandler (const std::vector<Param> &p_list, const std::map<std::string,std::any> &defaults_input);
 	
-	template<typename Scalar> Scalar get (const string label, const size_t index=0) const;
-	template<typename Scalar> Scalar get_default (const string label) const;
-	bool HAS (const string label, const size_t index=0) const;
-	bool HAS_ANY_OF (const initializer_list<string> &labels, const size_t &index=0) const;
-	bool HAS_NONE_OF (const initializer_list<string> &labels, const size_t &index=0) const;
-	template<typename Scalar> bool ARE_ALL_ZERO (const initializer_list<string> &labels, const size_t &index=0) const;
+	template<typename Scalar> Scalar get (const std::string label, const size_t index=0) const;
+	template<typename Scalar> Scalar get_default (const std::string label) const;
+	bool HAS (const std::string label, const size_t index=0) const;
+	bool HAS_ANY_OF (const std::initializer_list<std::string> &labels, const size_t &index=0) const;
+	bool HAS_NONE_OF (const std::initializer_list<std::string> &labels, const size_t &index=0) const;
+	template<typename Scalar> bool ARE_ALL_ZERO (const std::initializer_list<std::string> &labels, const size_t &index=0) const;
 	inline size_t size() const {return params.size();}
 	
-//	string info() const;
+//	std::string info() const;
 	
-	template<typename Scalar> param0d<Scalar> fill_array0d (string label_def, string label_x, size_t loc=0) const;
-	template<typename Scalar> param1d<Scalar> fill_array1d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
+	template<typename Scalar> param0d<Scalar> fill_array0d (std::string label_def, std::string label_x, size_t loc=0) const;
+	template<typename Scalar> param1d<Scalar> fill_array1d (std::string label_x, std::string label_a, size_t size_a, size_t loc=0) const;
 	
-	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, size_t size_a, size_t loc=0) const;
-	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_t loc=0) const;
+	template<typename Scalar> param2d<Scalar> fill_array2d (std::string label_x, std::string label_a, size_t size_a, size_t loc=0) const;
+	template<typename Scalar> param2d<Scalar> fill_array2d (std::string label_x, std::string label_a, std::array<size_t,2> size_a, size_t loc=0) const;
 	
-	template<typename Scalar> param2d<Scalar> fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, 
+	template<typename Scalar> param2d<Scalar> fill_array2d (std::string label_x1, std::string label_x2, std::string label_a, size_t size_a, size_t loc, 
 	                                                        bool PERIODIC=false) const;
 	
 private:
 	
 	Eigen::IOFormat arrayFormat;
 	
-	size_t calc_cellsize (const vector<Param> &p_list);
+	size_t calc_cellsize (const std::vector<Param> &p_list);
 	
-	vector<map<string,std::any> > params;
-	map<string,std::any> defaults;
+	std::vector<std::map<std::string,std::any> > params;
+	std::map<std::string,std::any> defaults;
 };
 
 ParamHandler::
-ParamHandler (const vector<Param> &p_list)
+ParamHandler (const std::vector<Param> &p_list)
 {
 	params.resize(calc_cellsize(p_list));
 	arrayFormat = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ";", "", "", "{", "}");
@@ -98,7 +103,7 @@ ParamHandler (const vector<Param> &p_list)
 }
 
 ParamHandler::
-ParamHandler (const vector<Param> &p_list, const map<string,std::any> &defaults_input)
+ParamHandler (const std::vector<Param> &p_list, const std::map<std::string,std::any> &defaults_input)
 :defaults(defaults_input)
 {
 	params.resize(calc_cellsize(p_list));
@@ -112,7 +117,7 @@ ParamHandler (const vector<Param> &p_list, const map<string,std::any> &defaults_
 
 template<typename Scalar> 
 Scalar ParamHandler::
-get (const string label, size_t index) const
+get (const std::string label, size_t index) const
 {
 	assert(index < params.size());
 	
@@ -138,12 +143,12 @@ get (const string label, size_t index) const
 
 template<typename Scalar> 
 Scalar ParamHandler::
-get_default (const string label) const
+get_default (const std::string label) const
 {
 	auto it = defaults.find(label);
 	if (it == defaults.end())
 	{
-		lout << "Cannot get default parameter " << label << "!" << endl;
+		lout << "Cannot get default parameter " << label << "!" << std::endl;
 		assert(it != defaults.end());
 	}
 	Scalar res;
@@ -153,7 +158,7 @@ get_default (const string label) const
 	}
 	catch (const std::bad_any_cast& e)
 	{
-		lout << e.what() << ", parameter " << label << ", output type=" << typeid(Scalar).name() << endl;
+		lout << e.what() << ", parameter " << label << ", output type=" << typeid(Scalar).name() << std::endl;
 		throw;
 	}
 	return res;
@@ -161,7 +166,7 @@ get_default (const string label) const
 }
 
 bool ParamHandler::
-HAS (const string label, const size_t index) const
+HAS (const std::string label, const size_t index) const
 {
 	auto it = params[index].find(label);
 	if (it != params[index].end())
@@ -180,34 +185,34 @@ HAS (const string label, const size_t index) const
 }
 
 bool ParamHandler::
-HAS_ANY_OF (const initializer_list<string> &labels, const size_t &index) const
+HAS_ANY_OF (const std::initializer_list<std::string> &labels, const size_t &index) const
 {
-	vector<bool> res;
+	std::vector<bool> res;
 	for (const auto &label:labels) {res.push_back(HAS(label,index));}
 	return (find(res.begin(), res.end(), true) != res.end())? true:false;
 }
 
 bool ParamHandler::
-HAS_NONE_OF (const initializer_list<string> &labels, const size_t &index) const
+HAS_NONE_OF (const std::initializer_list<std::string> &labels, const size_t &index) const
 {
 	return !HAS_ANY_OF(labels,index);
 }
 
 template<typename Scalar>
 bool ParamHandler::
-ARE_ALL_ZERO (const initializer_list<string> &labels, const size_t &index) const
+ARE_ALL_ZERO (const std::initializer_list<std::string> &labels, const size_t &index) const
 {
-	vector<bool> res;
+	std::vector<bool> res;
 	for (const auto &label:labels) {res.push_back(get<Scalar>(label,index) == 0);}
 	return (find(res.begin(), res.end(), false) != res.end())? false:true;
 }
 
 size_t ParamHandler::
-calc_cellsize (const vector<Param> &p_list)
+calc_cellsize (const std::vector<Param> &p_list)
 {
 	if (p_list.size() == 0) return 1; // p_list = {} => use only defaults
 	
-	set<size_t> indices;
+	std::set<size_t> indices;
 	
 	for (auto p:p_list)
 	{
@@ -224,7 +229,7 @@ calc_cellsize (const vector<Param> &p_list)
 
 template<typename Scalar>
 param0d<Scalar> ParamHandler::
-fill_array0d (string label_def, string label_x, size_t loc) const
+fill_array0d (std::string label_def, std::string label_x, size_t loc) const
 {
 	param0d<Scalar> res;
 	res.x = get_default<Scalar>(label_def);
@@ -233,7 +238,7 @@ fill_array0d (string label_def, string label_x, size_t loc) const
 	{
 		res.x = get<Scalar>(label_x,loc);
 		
-		stringstream ss;
+		std::stringstream ss;
 		ss << label_x << "=" << res.x;
 		res.label = ss.str();
 	}
@@ -247,7 +252,7 @@ fill_array0d (string label_def, string label_x, size_t loc) const
 
 template<typename Scalar>
 param1d<Scalar> ParamHandler::
-fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
+fill_array1d (std::string label_x, std::string label_a, size_t size_a, size_t loc) const
 {
 	assert(!(HAS(label_x) and HAS(label_a)));
 	
@@ -256,7 +261,7 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 	res.a.resize(size_a);
 	res.a.setZero();
 	res.x = get_default<Scalar>(label_x);
-	stringstream ss;
+	std::stringstream ss;
 	
 	if (HAS(label_x,loc))
 	{
@@ -288,7 +293,7 @@ fill_array1d (string label_x, string label_a, size_t size_a, size_t loc) const
 
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
-fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
+fill_array2d (std::string label_x, std::string label_a, size_t size_a, size_t loc) const
 {
 	return fill_array2d<Scalar>(label_x, label_a, {{size_a, size_a}}, loc);
 }
@@ -296,7 +301,7 @@ fill_array2d (string label_x, string label_a, size_t size_a, size_t loc) const
 // hopping in x-direction
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
-fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_t loc) const
+fill_array2d (std::string label_x, std::string label_a, std::array<size_t,2> size_a, size_t loc) const
 {
 	assert(!(HAS(label_x) and HAS(label_a)));
 	
@@ -315,7 +320,7 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 	res.x = get_default<Scalar>(label_x);
 	set_a();
 	
-	stringstream ss;
+	std::stringstream ss;
 	
 	if (HAS(label_x,loc))
 	{
@@ -349,7 +354,7 @@ fill_array2d (string label_x, string label_a, std::array<size_t,2> size_a, size_
 // hopping in y-direction
 template<typename Scalar>
 param2d<Scalar> ParamHandler::
-fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, size_t loc, bool PERIODIC) const
+fill_array2d (std::string label_x1, std::string label_x2, std::string label_a, size_t size_a, size_t loc, bool PERIODIC) const
 {
 	assert(!(HAS(label_x1) and HAS(label_a)));
 	assert(!(HAS(label_x2) and HAS(label_a)));
@@ -382,7 +387,7 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 	}
 	set_a();
 	
-	stringstream ss;
+	std::stringstream ss;
 	
 	if (HAS(label_x1,loc) or HAS(label_x2,loc))
 	{
@@ -410,17 +415,17 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 
 // It makes little sense, to print out std::any, but here is a possibility if you know all possible types:
 
-//string ParamHandler::
+//std::string ParamHandler::
 //info() const
 //{
-//	stringstream ss;
+//	std::stringstream ss;
 //	
-//	unordered_map<type_index,string> type_names;
+//	unordered_std::map<type_index,std::string> type_names;
 //	type_names[type_index(typeid(int))]             = "int";
 //	type_names[type_index(typeid(size_t))]          = "size_t";
 //	type_names[type_index(typeid(double))]          = "double";
 //	type_names[type_index(typeid(complex<double>))] = "complex<double>";
-//	type_names[type_index(typeid(vector<double>))]  = "vector<double>";
+//	type_names[type_index(typeid(std::vector<double>))]  = "std::vector<double>";
 //	type_names[type_index(typeid(bool))]            = "bool";
 //	
 //	for (auto p:params)
@@ -443,9 +448,9 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 //		{
 //			ss << any_cast<complex<double> >(p.second);
 //		}
-//		else if (type_names[std::type_index(p.second.type())] == "vector<double>")
+//		else if (type_names[std::type_index(p.second.type())] == "std::vector<double>")
 //		{
-//			vector<double> pval = any_cast<vector<double> >(p.second);
+//			std::vector<double> pval = any_cast<std::vector<double> >(p.second);
 //			for (int i=0; i<pval.size(); ++i)
 //			{
 //				ss << any_cast<double>(pval[i]);
@@ -463,7 +468,7 @@ fill_array2d (string label_x1, string label_x2, string label_a, size_t size_a, s
 //		{
 //			throw ("unknown parameter type!");
 //		}
-//		ss << endl;
+//		ss << std::endl;
 //	}
 //	
 //	return ss.str();

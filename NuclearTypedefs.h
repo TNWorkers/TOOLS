@@ -177,7 +177,9 @@ namespace Nuclear
 		return res;
 	}
 	
-	std::array<string,9> specletter = {"s","p","d","f","g","h","i","j","k"};
+	std::array<string,13> specletter = {"s","p","d","f","g", // 1,3,5,7,9
+	                                    "h","i","j","k","l", // 11,13,15,17,19
+	                                    "m","n","o"}; // 21,23,25
 	
 	std::array<int,8> magix = {2,8,20,28,50,82,126,184};
 	

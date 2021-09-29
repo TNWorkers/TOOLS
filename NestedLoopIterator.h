@@ -34,7 +34,7 @@ public:
 	inline std::size_t index() {return curr_index;}
 	inline std::size_t index_sum() {return accumulate(tensor_index.begin(), tensor_index.end(), 0);}
 	inline std::size_t operator() (std::size_t index) const {return tensor_index[index];}
-        inline std::vector<std::size_t> operator() () const {return tensor_index;}
+	inline std::vector<std::size_t> operator() () const {return tensor_index;}
 	
 private:
 
