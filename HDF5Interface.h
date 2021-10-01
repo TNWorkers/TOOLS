@@ -65,8 +65,8 @@ public:
 	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");
 	
-	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const char * setname);
-	template<typename ScalarType> void load_vector (const char * setname, ScalarType * vec[]);
+        template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const std::string& setname);
+        template<typename ScalarType> void load_vector (ScalarType * vec, const std::string& setname);
 	
 	template<typename ScalarType> void save_matrix (const MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_matrix (MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
@@ -209,7 +209,7 @@ load_matrix (Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic>  &mat, std:
 	
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(2);
 	hsize_t dimensions[dimensions_size];
-	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
+	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
 	H5::DataSpace memspace(2,dimensions);
 	
 	//Need to use a Rowmajor matrix here and convert afterwards, because HDF5 us RowMajor storage order.
@@ -267,7 +267,7 @@ load_vector (Eigen::Matrix<ScalarType,Eigen::Dynamic,1>  &vec, std::string setna
 	
 	constexpr std::size_t dimensions_size = 1ul;
 	hsize_t dimensions[dimensions_size];
-	int ndims = dataspace.getSimpleExtentDims(dimensions, NULL);
+	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims(dimensions, NULL);
 	H5::DataSpace memspace(1,dimensions);
 	
 	Eigen::Matrix<ScalarType,Eigen::Dynamic,1> temp(dimensions[0]);
@@ -327,7 +327,7 @@ load_tensor (TensorType<ScalarType,Nl>  &ten, std::string setname)
 
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);	
 	hsize_t dimensions[dimensions_size];
-	int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
+	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
 	H5::DataSpace memspace(Nl,dimensions);
 
 	std::array<Index,Nl> dims;
@@ -349,14 +349,14 @@ load_tensor (TensorType<ScalarType,Nl>  &ten, std::string setname)
 
 template<typename ScalarType>
 void HDF5Interface::
-save_vector (const ScalarType * vec, const size_t size, const char * setname)
+save_vector (const ScalarType * vec, const size_t size, const std::string& setname)
 {
 	// write uncompressed
 	assert(MODE==WRITE);
 	hsize_t length[] = {size};
 	H5::DataSpace space(1,length);
 	H5::IntType datatype(native_type<ScalarType>());
-	H5::DataSet dataset = file->createDataSet(setname, datatype, space);
+	H5::DataSet dataset = file->createDataSet(setname.c_str(), datatype, space);
 	dataset.write(vec, native_type<ScalarType>());
 
 	// write compressed
@@ -397,15 +397,15 @@ save_vector (const ScalarType * vec, const size_t size, const char * setname)
 
 template<typename ScalarType>
 void HDF5Interface::
-load_vector (const char * setname, ScalarType * vec[])
+load_vector (ScalarType * vec, const std::string& setname)
 {
 	assert(MODE==READ);
-	H5::DataSet dataset = file->openDataSet(setname);
+	H5::DataSet dataset = file->openDataSet(setname.c_str());
 	H5::DataSpace dataspace = dataset.getSpace();
 	hsize_t length[1];
-	int ndims = dataspace.getSimpleExtentDims(length,NULL);
+	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims(length,NULL);
 	H5::DataSpace memspace(1,length);
-	dataset.read(*vec, native_type<ScalarType>(), memspace, dataspace);
+	dataset.read(vec, native_type<ScalarType>(), memspace, dataspace);
 }
 
 template<typename ScalarType>
@@ -441,7 +441,7 @@ get_vector_size (const char * setname)
 	H5::DataSet dataset = file->openDataSet(setname);
 	H5::DataSpace dataspace = dataset.getSpace();
 	hsize_t length[1];
-	int ndims = dataspace.getSimpleExtentDims(length,NULL);
+	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims(length,NULL);
 	return length[0];
 }
 
