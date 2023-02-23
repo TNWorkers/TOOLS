@@ -322,17 +322,17 @@ fill_array2d (std::string label_x, std::string label_a, std::array<size_t,2> siz
 	
 	std::stringstream ss;
 	
-	if (HAS(label_x,loc))
-	{
-		res.x = get<Scalar>(label_x,loc);
-		ss << label_x << "=" << res.x;
-		set_a();
-	}
-	else if (HAS(label_a,loc))
+	if (HAS(label_a,loc))
 	{
 		res.a = get<Eigen::Array<Scalar,Eigen::Dynamic,Eigen::Dynamic> >(label_a,loc);
 		ss << label_a << "=" << res.a.format(arrayFormat);
 		res.label = ss.str();
+	}
+	else if (HAS(label_x,loc))
+	{
+		res.x = get<Scalar>(label_x,loc);
+		ss << label_x << "=" << res.x;
+		set_a();
 	}
 	
 	if (HAS(label_x,loc) or HAS(label_a,loc))
