@@ -44,23 +44,35 @@ struct SaveData
 		}
 	}
 	
+	void add_strings (std::initializer_list<std::string> labels)
+	{
+		for (const auto &label:labels)
+		{
+			str.insert(std::pair<std::string,string>(label,""));
+		}
+	}
+	
 	void save (HDF5Interface &target, string group="")
 	{
 		for (auto it=intg.begin(); it!=intg.end(); ++it)
 		{
-			target.save_scalar(it->second,it->first,group);
+			target.save_scalar(it->second, it->first, group);
 		}
 		for (auto it=scal.begin(); it!=scal.end(); ++it)
 		{
-			target.save_scalar(it->second,it->first,group);
+			target.save_scalar(it->second, it->first, group);
 		}
 		for (auto it=vec.begin(); it!=vec.end(); ++it)
 		{
-			target.save_vector(it->second,it->first,group);
+			target.save_vector(it->second, it->first, group);
 		}
 		for (auto it=mat.begin(); it!=mat.end(); ++it)
 		{
-			target.save_matrix(it->second,it->first,group);
+			target.save_matrix(it->second, it->first, group);
+		}
+		for (auto it=str.begin(); it!=str.end(); ++it)
+		{
+			target.save_char(it->second, it->first, group);
 		}
 	}
 	
@@ -68,7 +80,7 @@ struct SaveData
 	std::map<std::string,double>   scal;
 	std::map<std::string,VectorXd> vec;
 	std::map<std::string,MatrixXd> mat;
-	
+	std::map<std::string,string>   str;
 };
 
 

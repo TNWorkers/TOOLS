@@ -65,8 +65,8 @@ public:
 	template<typename ScalarType> void save_scalar (ScalarType x, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_scalar (ScalarType &x, std::string setname, std::string grp_name="");
 	
-        template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const std::string& setname);
-        template<typename ScalarType> void load_vector (ScalarType * vec, const std::string& setname);
+	template<typename ScalarType> void save_vector (const ScalarType * vec, const size_t size, const std::string& setname);
+	template<typename ScalarType> void load_vector (ScalarType * vec, const std::string& setname);
 	
 	template<typename ScalarType> void save_matrix (const MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
 	template<typename ScalarType> void load_matrix (MatrixType<ScalarType> &mat, std::string setname, std::string grp_name="");
@@ -79,8 +79,8 @@ public:
 	template<typename ScalarType, Index Nl> void load_tensor (TensorType<ScalarType,Nl> &ten, std::string setname);
 	#endif
 	
-	void save_char (std::string salvandum, const char * setname);
-	void load_char (const char * setname, std::string &c);
+	void save_char (std::string x, std::string setname, std::string grp_name="");
+	void load_char (std::string &x, std::string setname, std::string grp_name="");
 	
 	std::size_t get_vector_size (const char * setname);
 	
@@ -289,7 +289,7 @@ save_tensor (const TensorType<ScalarType,Nl> &ten, std::string setname, std::str
 	Index n=Nl-1;
 	std::generate(shuffle_dims.begin(),shuffle_dims.end(),[&n]{ return n--; });
 	Eigen::Tensor<ScalarType,Nl,Eigen::RowMajor,Index> switch_to_row = ten.swap_layout().shuffle(shuffle_dims); 
-
+	
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);
 //	std::array<Index,dimensions_size> tmp; // not used??
 	
@@ -321,25 +321,25 @@ void HDF5Interface::
 load_tensor (TensorType<ScalarType,Nl>  &ten, std::string setname)
 {
 	assert(MODE==READ);
-
+	
 	H5::DataSet dataset = file->openDataSet(setname);
 	H5::DataSpace dataspace = dataset.getSpace();
-
+	
 	constexpr std::size_t dimensions_size = static_cast<std::size_t>(Nl);	
 	hsize_t dimensions[dimensions_size];
 	[[maybe_unused]] int ndims = dataspace.getSimpleExtentDims( dimensions, NULL);
 	H5::DataSpace memspace(Nl,dimensions);
-
+	
 	std::array<Index,Nl> dims;
 	for (std::size_t i=0; i<Nl; i++)
 	{
 		dims[i] = static_cast<Index>(dimensions[i]);
 	}
-
+	
 	//Need to use a Rowmajor tensor here and convert afterwards, because HDF5 us RowMajor storage order.
 	Eigen::Tensor<ScalarType,Nl,Eigen::RowMajor,Index> temp(dims);
 	dataset.read(temp.data(), native_type<ScalarType>(), memspace, dataspace);
-
+	
 	std::array<Index,Nl> shuffle_dims;
 	Index n=Nl-1;
 	std::generate(shuffle_dims.begin(),shuffle_dims.end(),[&n]{ return n--; });
@@ -471,30 +471,56 @@ save_scalar (ScalarType x, std::string setname, std::string grp_name)
 }
 
 void HDF5Interface::
-save_char (std::string salvandum, const char * setname)
+save_char (std::string x, std::string setname, std::string grp_name)
 {
 	assert(MODE==WRITE or MODE==REWRITE);
 	hsize_t length[] = {1};
 	H5::DataSpace space(1,length);
 	H5::StrType datatype(0,H5T_VARIABLE);
-	H5::DataSet dataset = file->createDataSet(setname, datatype, space);
+	//H5::DataSet dataset = file->createDataSet(setname.c_str(), datatype, space);
+	
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->createDataSet(setname.c_str(), datatype, space);
+		delete g;
+	}
+	else
+	{
+		dataset = file->createDataSet(setname.c_str(), datatype, space);
+	}
+	
 	const char * this_sucks_hairy_balls_but_it_works[1] = {0};
-	this_sucks_hairy_balls_but_it_works[0] = salvandum.c_str();
+	this_sucks_hairy_balls_but_it_works[0] = x.c_str();
 	dataset.write((void*)this_sucks_hairy_balls_but_it_works, datatype);
 }
 
 void HDF5Interface::
-load_char (const char * setname, std::string &c)
+load_char (std::string &x, std::string setname, std::string grp_name)
 {
 	assert(MODE==READ);
-	H5::DataSet dataset = file->openDataSet(setname);
+	//H5::DataSet dataset = file->openDataSet(setname);
+	
+	H5::DataSet dataset;
+	if (grp_name != "")
+	{
+		std::string fullPath = "/" + grp_name;
+		H5::Group * g = new H5::Group(file->openGroup(fullPath.c_str()));
+		dataset = g->openDataSet(setname);
+		delete g;
+	}
+	else
+	{
+		dataset = file->openDataSet(setname);
+	}
+	H5::DataSpace dataspace = dataset.getSpace();
+	
 	H5::DataType datatype = dataset.getDataType();
-	//H5::DataSpace dataspace = dataset.getSpace();
-	//hsize_t length[] = {1};
-	//H5::DataSpace double_memspace(1,length);
 	const char * this_sucks_hairy_balls_but_it_works[1] = {0};
 	dataset.read((void*)this_sucks_hairy_balls_but_it_works, datatype);
-	c = this_sucks_hairy_balls_but_it_works[0];
+	x = this_sucks_hairy_balls_but_it_works[0];
 }
 
 #endif

@@ -38,11 +38,15 @@ public:
 	
 	std::stringstream stream;
 	
+	string get_history() const {return history;};
+	
 private:
 	
 	void construct();
 	
 	string filename;
+	
+	string history = "";
 	
 	bool SHOW_START_TIME = true;
 	bool SHOW_END_TIME = true;
@@ -151,8 +155,12 @@ append()
 	
 	std::ofstream logfile;
 	logfile.open(filename,std::ios_base::app);
-	logfile << remove_termcolor(stream.str());
+	string data = remove_termcolor(stream.str());
+	logfile << data;
 	logfile.close();
+	
+	history += data;
+	
 	stream.str("");
 }
 
