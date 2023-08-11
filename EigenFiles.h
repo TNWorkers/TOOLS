@@ -58,7 +58,8 @@ Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> loadMatrix (const std::strin
 	return readMatrix(filename);
 }
 
-void saveMatrix (const Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> &M, const std::string filename, bool PRINT = true)
+template<typename Scalar>
+void saveMatrix (const Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic> &M, const std::string filename, bool PRINT = true)
 {
 	ofstream fout(filename);
 	for (int i=0; i<M.rows(); ++i)
