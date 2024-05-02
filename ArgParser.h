@@ -125,8 +125,8 @@ info() const
 	ss << "ArgParser: ";
 	for (auto it=dictionary.begin(); it!=dictionary.end(); ++it)
 	{
-		ss << it->first << "=" << it->second;
-		if (it!=--dictionary.end()) {ss << ", ";}
+		ss << "-" << it->first << "=" << it->second;
+		if (it!=--dictionary.end()) {ss << " ";}
 	}
 	return ss.str();
 }
